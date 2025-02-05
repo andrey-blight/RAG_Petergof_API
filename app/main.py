@@ -1,22 +1,9 @@
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import v1_router
-from app.core import scheduler, settings
 
-
-@asynccontextmanager
-async def lifespan(f_app: FastAPI):
-    scheduler.start()
-
-    yield
-
-    scheduler.shutdown()
-
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,7 +14,6 @@ app.add_middleware(
 )
 
 app.include_router(v1_router, prefix="/api/v1")
-
 
 # class ConnectionManager:
 #     def __init__(self):

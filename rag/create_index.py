@@ -5,8 +5,6 @@ import pickle
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
-from transformers import AutoModel, AutoTokenizer
-import torch
 
 load_dotenv()
 DATA_DIR = os.getenv("DATA_DIR")
