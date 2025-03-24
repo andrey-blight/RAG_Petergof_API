@@ -1,59 +1,108 @@
 import faiss
-import asyncio
 import numpy as np
 import pickle
+import sys
 import os
+from time import time
 from sentence_transformers import SentenceTransformer
 from yandex_cloud_ml_sdk import YCloudML
-
+from transformers import AutoModel, AutoTokenizer
+import torch
 from dotenv import load_dotenv
+
+from rank_bm25 import BM25Okapi
+import re
+from collections import defaultdict
 
 load_dotenv()
 
 YC_API_KEY = os.getenv("YC_API_KEY")
 YC_FOLDER_ID = os.getenv("YC_FOLDER_ID")
+USING_FILES_PATH = "data/using_files/files.txt"
 
 
-async def get_answer(question):
-    index = faiss.read_index("rag/data/text_index.faiss")
-    with open("rag/data/metadata.pkl", "rb") as f:
+def preprocess_text(text):
+    text = re.sub(r"[^\w\s]", "", text).lower()
+    return text.split()
+
+
+def get_selected_files():
+    files = []
+    with open(USING_FILES_PATH, "r", encoding="utf-8") as file:
+        for line in file.readlines():
+            filename = line.strip()
+            if filename:
+                files.append(filename)
+    return files
+
+
+async def get_answer(index_name, question):
+    t = time()
+    index = faiss.read_index(f"rag/data/rag/index_{index_name}.faiss")
+
+    # selected_files = get_selected_files()
+    with open(f"rag/data/rag/metadata_{index_name}.pkl", "rb") as f:
         metadata = pickle.load(f)
 
-    with open("rag/data/chunks.pkl", "rb") as f:
+    with open(f"rag/data/rag/chunks_{index_name}.pkl", "rb") as f:
         chunks = pickle.load(f)
 
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-    question_embedding = model.encode([question])
+    with open(f"rag/data/rag/bm25_{index_name}.pkl", "rb") as f:
+        bm25 = pickle.load(f)
 
-    k = 5
-    distances, indices = index.search(np.array(question_embedding), k)
-
-    result = ""
-
-    for i, idx in enumerate(indices[0]):
-        file_name = metadata[idx]
-        text_chunk = chunks[idx]
-        result += f"Текст {i + 1}:\nФайл: {file_name}\nТекст: {text_chunk}\n"
-
-    messages = [
-        {
-            "role": "user",
-            "text": f"Вы ассистируете научного руководителя музейного комплекса Петергоф. Ниже вам дан контекст, откуда брать информацию. Отвечайте на вопросы, которые он задает. Игнорируйте контекст, если считаете его нерелевантным. Ответь на вопрос: {question}. Вместе с ответом также пишите из какого файла взята информация." + result,
-        },
-    ]
+    print("Openings:", time() - t)
+    t = time()
 
     sdk = YCloudML(
         folder_id=YC_FOLDER_ID,
         auth=YC_API_KEY,
     )
 
-    result = sdk.models.completions("yandexgpt").configure(temperature=0.2).run(messages)
+    query_model = sdk.models.text_embeddings("query")
+    query_embedding = np.array([query_model.run(question)], dtype=np.float32)
+    print("Querry embedding:", time() - t)
+    t = time()
 
-    return result[0].text
+    top_k = 18
+    distances, indices = index.search(query_embedding, top_k)
+    print("Index search:", time() - t)
+    t = time()
+
+    top_k_bm25 = 3
+    bm25_scores = bm25.get_scores(preprocess_text(question))
+    top_bm25_indices = np.argsort(bm25_scores)[-top_k_bm25:][::-1]
+    print("BM25 search:", time() - t)
+    t = time()
+
+    result = ""
+    for i, idx in enumerate(indices[0]):
+        if idx < len(chunks):
+            result += f"Текст {i + 1}:\nФайл: {metadata[idx][0]}, страница: {metadata[idx][1]}\nТекст: {chunks[idx]}\n\n"
+
+    for i, idx in enumerate(top_bm25_indices):
+        result += f"Текст {top_k + i + 1} (BM25):\nФайл: {metadata[idx]}\nТекст: {chunks[idx]}\n\n"
+    messages = [
+        {
+            "role": "user",
+            "text": f"Вы ассистируете научного руководителя музейного комплекса Петергоф. Ниже вам дан контекст, откуда брать информацию. Разрешено брать сразу несколько текстов. Отвечайте на вопросы, которые он задает. Игнорируйте контекст, если считаете его нерелевантным. Ответь на вопрос: {question}. Вместе с ответом также напишите название файла и страницу, откуда была взята информация.\nКонтекст:\n" + result,
+        },
+    ]
+    print("Forming result:", time() - t)
+    t = time()
+    # print(result)
+    resultt = sdk.models.completions("yandexgpt").configure(temperature=0.2).run(messages)
+    print("YaGPT time:", time() - t)
+
+    return resultt[0].text
 
 
 if __name__ == "__main__":
-    question = "Что стало самой яркой чертой преобразований русского двора?"
-    res = asyncio.run(get_answer(question))
+    if len(sys.argv) < 3:
+        print("Недостаточно параметров запуска")
+        sys.exit(1)
 
-    print(res)
+    index_name = sys.argv[1]
+    question = sys.argv[2]
+    result = get_answer(index_name, question)
+
+    print(result)
