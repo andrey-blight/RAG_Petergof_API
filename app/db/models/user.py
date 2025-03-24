@@ -17,7 +17,7 @@ class User(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     def __repr__(self):
-        return f"<User(email={self.email})>"
+        return f"<User(email={self.email}, hashed_password={self.hashed_password})>"
 
 
 async def create_user(db: AsyncSession, user_db: UserCreate):

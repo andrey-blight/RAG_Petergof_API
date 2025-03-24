@@ -9,7 +9,7 @@ from app.core import settings
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/token")
 
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
 
     if expires_delta:
