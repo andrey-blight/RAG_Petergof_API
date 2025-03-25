@@ -20,28 +20,37 @@ YC_API_KEY = os.getenv("YC_API_KEY")
 YC_FOLDER_ID = os.getenv("YC_FOLDER_ID")
 USING_FILES_PATH = "data/using_files/files.txt"
 
-
 def preprocess_text(text):
     text = re.sub(r"[^\w\s]", "", text).lower()
     return text.split()
 
 
-async def get_answer(index_name, question):
-    t = time()
-    index = faiss.read_index(f"rag/data/rag/index_{index_name}.faiss")
+def get_selected_files():
+    files = []
+    with open(USING_FILES_PATH, "r", encoding="utf-8") as file:
+        for line in file.readlines():
+            filename = line.strip()
+            if filename:
+                files.append(filename)
+    return files
 
-    with open(f"rag/data/rag/metadata_{index_name}.pkl", "rb") as f:
+def get_answer(index_name, question):
+    t = time()
+    index = faiss.read_index(f"data/rag/index_{index_name}.faiss")
+    
+    #selected_files = get_selected_files()
+    with open(f"data/rag/metadata_{index_name}.pkl", "rb") as f:
         metadata = pickle.load(f)
 
-    with open(f"rag/data/rag/chunks_{index_name}.pkl", "rb") as f:
+    with open(f"data/rag/chunks_{index_name}.pkl", "rb") as f:
         chunks = pickle.load(f)
-
-    with open(f"rag/data/rag/bm25_{index_name}.pkl", "rb") as f:
+        
+    with open(f"data/rag/bm25_{index_name}.pkl", "rb") as f:
         bm25 = pickle.load(f)
-
+        
     print("Openings:", time() - t)
     t = time()
-
+    
     sdk = YCloudML(
         folder_id=YC_FOLDER_ID,
         auth=YC_API_KEY,
@@ -51,12 +60,12 @@ async def get_answer(index_name, question):
     query_embedding = np.array([query_model.run(question)], dtype=np.float32)
     print("Querry embedding:", time() - t)
     t = time()
-
+    
     top_k = 18
     distances, indices = index.search(query_embedding, top_k)
     print("Index search:", time() - t)
     t = time()
-
+    
     top_k_bm25 = 3
     bm25_scores = bm25.get_scores(preprocess_text(question))
     top_bm25_indices = np.argsort(bm25_scores)[-top_k_bm25:][::-1]
@@ -66,8 +75,8 @@ async def get_answer(index_name, question):
     result = ""
     for i, idx in enumerate(indices[0]):
         if idx < len(chunks):
-            result += f"Текст {i + 1}:\nФайл: {metadata[idx][0]}, страница: {metadata[idx][1]}\nТекст: {chunks[idx]}\n\n"
-
+            result += f"Текст {i+1}:\nФайл: {metadata[idx][0]}, страница: {metadata[idx][1]}\nТекст: {chunks[idx]}\n\n"
+    
     for i, idx in enumerate(top_bm25_indices):
         result += f"Текст {top_k + i + 1} (BM25):\nФайл: {metadata[idx]}\nТекст: {chunks[idx]}\n\n"
     messages = [
@@ -78,20 +87,22 @@ async def get_answer(index_name, question):
     ]
     print("Forming result:", time() - t)
     t = time()
-    # print(result)
+    #print(result)
     resultt = sdk.models.completions("yandexgpt").configure(temperature=0.2).run(messages)
     print("YaGPT time:", time() - t)
-
+    
     return resultt[0].text
-
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Недостаточно параметров запуска")
         sys.exit(1)
-
+    
     index_name = sys.argv[1]
     question = sys.argv[2]
     result = get_answer(index_name, question)
-
+    
     print(result)
+    
+
+    
