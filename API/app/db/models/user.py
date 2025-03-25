@@ -2,9 +2,9 @@ from sqlalchemy import Column, Integer, String, DateTime, select
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.base import Base
-from app.db.schemas import UserCreate
-from app.core import get_hash
+from API.app import Base
+from API.app import UserCreate
+from API.app.core import get_hash
 
 
 class User(Base):
