@@ -1,15 +1,15 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Header
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core import settings
-from app.core.security import create_token, get_hash, verify_refresh_token
-from app.db.schemas import Token, UserCreate
-from app.db.session import get_db
-from app.db.models.user import get_user, create_user
+from API.app.core import settings
+from API.app.core import create_token, get_hash, verify_refresh_token
+from API.app import Token, UserCreate
+from API.app.db.session import get_db
+from API.app import get_user, create_user
 
 router = APIRouter()
 
@@ -27,7 +27,7 @@ def generate_tokens(user_email) -> Token:
 # Feature: make refresh token unavailable after use
 @router.post("/refresh", response_model=Token)
 async def login_for_access_token(
-        refresh_token: str,
+        refresh_token: str = Header(),
         db: AsyncSession = Depends(get_db)) -> Token:
     payload = verify_refresh_token(refresh_token)
 
@@ -71,7 +71,7 @@ async def login_for_access_token(
     return generate_tokens(form_data.username)
 
 
-@router.post("/register/", response_model=Token)
+@router.post("/register", response_model=Token)
 async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     existing_user = await get_user(db, user.email)
     if existing_user:

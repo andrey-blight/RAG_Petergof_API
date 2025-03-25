@@ -5,7 +5,7 @@ import jwt
 from fastapi import HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from app.core import settings
+from API.app.core import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/token")
 
