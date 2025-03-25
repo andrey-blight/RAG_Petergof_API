@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from yandex_cloud_ml_sdk import YCloudML
 from tqdm import tqdm
 import json
+from get_indexes import get_indexes
 from rank_bm25 import BM25Okapi
 import re
 
@@ -25,21 +26,16 @@ CHUNKS_PATH = "data/chunks"
 EMBEDS_PATH = "data/embeddings"
 USING_FILES_PATH = "data/using_files/files.txt"
 
+
 def preprocess_text(text):
     text = re.sub(r"[^\w\s]", "", text).lower()
     return text.split()
 
-def get_selected_files():
-    files = []
-    with open(USING_FILES_PATH, "r", encoding="utf-8") as file:
-        for line in file.readlines():
-            filename = line.strip()
-            if filename:
-                files.append(filename)
-    return files
-
-
-def create_index(name):
+def create_index(name, selected_files):
+    if name in get_indexes():
+        print("Индекс с таким именем уже существует")
+        return
+    
     meta_path = os.path.join(METADATA_PATH, "metadata.json")
     if not os.path.exists(meta_path):
         print("Нет сохранённого индекса.")
@@ -48,7 +44,6 @@ def create_index(name):
     with open(meta_path, "r", encoding="utf-8") as meta_file:
         metadata = json.load(meta_file)
 
-    selected_files = get_selected_files()
     if not selected_files:
         print("Нет выбранных файлов для загрузки в индекс.")
         return
@@ -100,7 +95,17 @@ def create_index(name):
        
     with open(os.path.join(RAG_PATH, f"bm25_{name}.pkl"), 'wb') as f:
         pickle.dump(bm25, f)
-
+    
+    list_indexes_path = os.path.join(METADATA_PATH, "list_indexes.json")
+    list_indexes = {}
+    if os.path.exists(list_indexes_path):
+        with open(list_indexes_path, "r", encoding="utf-8") as f:
+            list_indexes = json.load(f)
+            
+    list_indexes[name] = {"files": selected_files}
+    with open(os.path.join(list_indexes_path), "w", encoding="utf-8") as f:
+        json.dump(list_indexes, f, ensure_ascii=False, indent=4)
+    
     print(f"Индекс сохранён. Записей: {index.ntotal}")
 
 
@@ -108,5 +113,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Недостаточно параметров запуска")
         sys.exit(1)
+    
+    lst = ['Кротов_Петр в Дюнкерке.txt','Кротов_Матросы поморы.txt']
 
-    create_index(sys.argv[1])
+    create_index(sys.argv[1], lst)

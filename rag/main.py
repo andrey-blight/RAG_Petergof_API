@@ -26,21 +26,10 @@ def preprocess_text(text):
     return text.split()
 
 
-def get_selected_files():
-    files = []
-    with open(USING_FILES_PATH, "r", encoding="utf-8") as file:
-        for line in file.readlines():
-            filename = line.strip()
-            if filename:
-                files.append(filename)
-    return files
-
-
 async def get_answer(index_name, question):
     t = time()
     index = faiss.read_index(f"rag/data/rag/index_{index_name}.faiss")
 
-    # selected_files = get_selected_files()
     with open(f"rag/data/rag/metadata_{index_name}.pkl", "rb") as f:
         metadata = pickle.load(f)
 
