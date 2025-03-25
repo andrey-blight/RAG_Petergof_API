@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: andrey
+      POSTGRES_PASSWORD: Password
+      POSTGRES_DB: rag_database
+    ports:
+      - "5432:5432"
+
+  api:
+    build: API
+    container_name: api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./API:/app
+    env_file:
+      - .env
+    restart: always

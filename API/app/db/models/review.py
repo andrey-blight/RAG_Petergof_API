@@ -2,8 +2,8 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from API.app import Base
-from API.app import Review as ReviewCreate
+from app.db import Base
+from app.db.schemas import Review as ReviewCreate
 
 
 class Review(Base):

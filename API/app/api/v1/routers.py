@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from API.app import rag_router, auth_router, statistic_router
+from app.api.v1.endpoints import rag_router, auth_router, statistic_router
 
 api_router = APIRouter()
 api_router.include_router(rag_router, tags=["Rag endpoints"])

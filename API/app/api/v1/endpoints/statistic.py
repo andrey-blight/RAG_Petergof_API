@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from API.app.core import validate_user
-from API.app import create_review
-from API.app import Review
-from API.app.db.session import get_db
+from app.core.dependencies import validate_user
+from app.db.models.review import create_review
+from app.db.schemas import Review
+from app.db.session import get_db
 
 router = APIRouter(dependencies=[Depends(validate_user)])
 

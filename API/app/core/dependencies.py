@@ -5,10 +5,10 @@ from fastapi import Depends, HTTPException, status
 from jwt.exceptions import InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from API.app.core import settings
-from API.app.core import oauth2_scheme
-from API.app import get_user, User
-from API.app.db.session import get_db
+from app.core import settings
+from app.core.security import oauth2_scheme
+from app.db.models.user import get_user, User
+from app.db.session import get_db
 
 
 async def validate_user(token: Annotated[str, Depends(oauth2_scheme)],

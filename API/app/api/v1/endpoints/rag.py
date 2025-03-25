@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 
-from API.app.core import validate_user
+from app.core.dependencies import validate_user
 from rag import get_answer
-from API.app import RagResponse, RagQuestion
+from app.db.schemas import RagResponse, RagQuestion
 
 router = APIRouter(dependencies=[Depends(validate_user)])
 
