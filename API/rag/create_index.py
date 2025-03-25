@@ -63,8 +63,8 @@ def create_index(name, selected_files):
             chunks = json.load(f)
         
         all_embeddings.append(embeddings)
-        all_chunks.extend([chunks[str(index)]["text"] for index in range(len(chunks))])
-        all_metadata.extend([(filename, chunks[str(index)]["page"]) for index in range(len(chunks))])
+        all_chunks.extend([elem["text"] for elem in chunks['data']])
+        all_metadata.extend([(filename, elem["page"]) for elem in chunks['data']])
 
     if not all_embeddings:
         print("Нет эмбеддингов для добавления в индекс.")
@@ -114,6 +114,6 @@ if __name__ == "__main__":
         print("Недостаточно параметров запуска")
         sys.exit(1)
     
-    lst = ['Кротов_Петр в Дюнкерке.txt','Кротов_Матросы поморы.txt']
+    lst = ['ещание_Петра_Великого_Российская_история_2010.txt', 'bd3ef0b4c0389a171f8f2e7.txt', 'Военные_журналы_юрналы_Петра_1.txt']
 
     create_index(sys.argv[1], lst)
