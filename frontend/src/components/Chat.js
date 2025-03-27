@@ -7,8 +7,8 @@ import CorrectionForm from "../components/CorrectionForm";
 import {sendStatistic} from "../api/SendStatistic";
 import DescriptionWindow from "./DescriptionWindow";
 import {getIndexes} from "../api/GetIndexes";
-import Tab from 'react-bootstrap/Tab';
-import Tabs from 'react-bootstrap/Tabs';
+import {isAdmin} from "../api/IsAdmin";
+import Nav from 'react-bootstrap/Nav';
 
 const ChatComponent = () => {
     const navigate = useNavigate();
@@ -20,12 +20,15 @@ const ChatComponent = () => {
     const [questionForCorrection, setQuestionForCorrection] = useState("");
     const [showCorrectionForm, setShowCorrectionForm] = useState(false);
     const [showDescriptionWindow, setShowDescriptionWindow] = useState(JSON.parse(localStorage.getItem("show_about") || "true"));
+    const [showTabs, setShowTabs] = useState(false);
 
     useEffect(() => {
         const fetchIndexes = async () => {
             const data = await getIndexes(navigate);
             setIndexes(data || []);
             setSelectIndex(data[0] || "");
+
+            setShowTabs(await isAdmin(navigate));
         };
         fetchIndexes();
     }, [navigate]);
@@ -75,24 +78,33 @@ const ChatComponent = () => {
         setShowDescriptionWindow(false);
     };
 
+
+
     return (
         <Container className="d-flex flex-column vh-100 border shadow-lg">
-            <Tabs
-                defaultActiveKey="profile"
-                id="uncontrolled-tab-example"
-                className="mb-3"
-                activeKey={"Chat"}
+            <Nav
+                activeKey="/chat"
+                variant="tabs"
             >
-                <Tab eventKey="Chat" title="Чат">
-                    Tab content for Home
-                </Tab>
-                <Tab eventKey="files" title="Добавить файл">
-                    Tab content for Profile
-                </Tab>
-                <Tab eventKey="index" title="Создать индекс">
-                    Tab content for Contact
-                </Tab>
-            </Tabs>
+                <Nav.Item>
+                    <Nav.Link href="/chat">Чат</Nav.Link>
+                </Nav.Item>
+
+                {showTabs && (
+                    <>
+                        <Nav.Item>
+                            <Nav.Link eventKey="link-1">Добавить файл</Nav.Link>
+                        </Nav.Item>
+                        <Nav.Item>
+                            <Nav.Link eventKey="link-2">Создать индекс</Nav.Link>
+                        </Nav.Item>
+                    </>
+                )}
+
+                <Nav.Item>
+                    <Nav.Link href="/login">Выйти из аккаунта</Nav.Link>
+                </Nav.Item>
+            </Nav>
 
             <div className="flex-grow-1 p-3 overflow-auto">
                 {messages.map((msg) => (
