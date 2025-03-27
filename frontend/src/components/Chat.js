@@ -5,6 +5,7 @@ import {askQuestion} from "../api/SendQuestion";
 import {useNavigate} from "react-router-dom";
 import CorrectionForm from "../components/CorrectionForm";
 import {sendStatistic} from "../api/SendStatistic";
+import DescriptionWindow from "./DescriptionWindow";
 
 const ChatComponent = () => {
     const [messages, setMessages] = useState([]);
@@ -13,6 +14,7 @@ const ChatComponent = () => {
     const [messageForCorrection, setMessageForCorrection] = useState("");
     const [questionForCorrection, setQuestionForCorrection] = useState("");
     const [showCorrectionForm, setShowCorrectionForm] = useState(false);
+    const [showDescriptionWindow, setShowDescriptionWindow] = useState(JSON.parse(localStorage.getItem("show_about") || "true"));
     const navigate = useNavigate();
 
     const sendMessage = async () => {
@@ -54,6 +56,10 @@ const ChatComponent = () => {
         setShowCorrectionForm(false);
         setMessageForCorrection("");
         setQuestionForCorrection("");
+    };
+
+    const handleDescriptionClose = () => {
+        setShowDescriptionWindow(false);
     };
 
     return (
@@ -99,6 +105,12 @@ const ChatComponent = () => {
                 />
             )}
 
+            {showDescriptionWindow && (
+                <DescriptionWindow
+                    onClose={handleDescriptionClose}
+                />
+            )}
+
             <Row className="border-top p-3">
                 <Col>
                     <Form.Control
@@ -128,6 +140,14 @@ const ChatComponent = () => {
                         <Dropdown.Item onClick={() => setSelectedModel("Second")}>Second</Dropdown.Item>
                         <Dropdown.Item onClick={() => setSelectedModel("Third")}>Third</Dropdown.Item>
                     </DropdownButton>
+                </Col>
+                <Col xs="auto">
+                    <Button
+                        variant="light"
+                        onClick={() => setShowDescriptionWindow(true)}
+                    >
+                        ?
+                    </Button>
                 </Col>
             </Row>
         </Container>

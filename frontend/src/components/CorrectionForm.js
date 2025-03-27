@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {Button, Form, Row, Col, Card} from "react-bootstrap";
 import {X} from "react-bootstrap-icons";
 import {sendStatistic} from "../api/SendStatistic";
-import {useNavigate} from "react-router-dom";  // Импорт иконки крестика
+import {useNavigate} from "react-router-dom";
 
 const CorrectionForm = ({messageForCorrection, setMessageForCorrection, question, onClose}) => {
     const [correctedAnswer, setCorrectedAnswer] = useState("");
@@ -21,7 +21,7 @@ const CorrectionForm = ({messageForCorrection, setMessageForCorrection, question
     return (
         <div
             className="d-flex justify-content-center align-items-center position-fixed top-50 start-50 translate-middle"
-            style={{width: '80%'}} // Увеличиваем ширину контейнера
+            style={{width: '80%'}}
         >
             <Card className="p-4" style={{width: "100%", maxWidth: "800px"}}>
                 <Card.Body>
