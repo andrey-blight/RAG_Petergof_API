@@ -7,6 +7,8 @@ import CorrectionForm from "../components/CorrectionForm";
 import {sendStatistic} from "../api/SendStatistic";
 import DescriptionWindow from "./DescriptionWindow";
 import {getIndexes} from "../api/GetIndexes";
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
 
 const ChatComponent = () => {
     const navigate = useNavigate();
@@ -75,6 +77,23 @@ const ChatComponent = () => {
 
     return (
         <Container className="d-flex flex-column vh-100 border shadow-lg">
+            <Tabs
+                defaultActiveKey="profile"
+                id="uncontrolled-tab-example"
+                className="mb-3"
+                activeKey={"Chat"}
+            >
+                <Tab eventKey="Chat" title="Чат">
+                    Tab content for Home
+                </Tab>
+                <Tab eventKey="files" title="Добавить файл">
+                    Tab content for Profile
+                </Tab>
+                <Tab eventKey="index" title="Создать индекс">
+                    Tab content for Contact
+                </Tab>
+            </Tabs>
+
             <div className="flex-grow-1 p-3 overflow-auto">
                 {messages.map((msg) => (
                     <Card
