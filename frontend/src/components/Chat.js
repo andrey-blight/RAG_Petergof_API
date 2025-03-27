@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Button, Form, Container, Row, Col, Card, DropdownButton, ButtonGroup} from "react-bootstrap";
 import Dropdown from 'react-bootstrap/Dropdown';
 import {askQuestion} from "../api/SendQuestion";
@@ -6,16 +6,27 @@ import {useNavigate} from "react-router-dom";
 import CorrectionForm from "../components/CorrectionForm";
 import {sendStatistic} from "../api/SendStatistic";
 import DescriptionWindow from "./DescriptionWindow";
+import {getIndexes} from "../api/GetIndexes";
 
 const ChatComponent = () => {
+    const navigate = useNavigate();
+    const [indexes, setIndexes] = useState([]);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
-    const [selectedModel, setSelectedModel] = useState("First");
+    const [selectIndex, setSelectIndex] = useState(indexes[0]);
     const [messageForCorrection, setMessageForCorrection] = useState("");
     const [questionForCorrection, setQuestionForCorrection] = useState("");
     const [showCorrectionForm, setShowCorrectionForm] = useState(false);
     const [showDescriptionWindow, setShowDescriptionWindow] = useState(JSON.parse(localStorage.getItem("show_about") || "true"));
-    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchIndexes = async () => {
+            const data = await getIndexes(navigate);
+            setIndexes(data || []);
+            setSelectIndex(data[0] || "");
+        };
+        fetchIndexes();
+    }, [navigate]);
 
     const sendMessage = async () => {
         if (!input.trim()) return;
@@ -26,7 +37,7 @@ const ChatComponent = () => {
 
         const botResponse = {
             id: messages.length + 2,
-            text: await askQuestion(input.trim(), navigate),
+            text: await askQuestion(selectIndex, input.trim(), navigate),
             sender: "bot",
             liked: null
         };
@@ -135,10 +146,12 @@ const ChatComponent = () => {
                     <Button onClick={sendMessage}>Отправить</Button>
                 </Col>
                 <Col xs="auto">
-                    <DropdownButton id="dropdown-basic-button" title={selectedModel} drop="up">
-                        <Dropdown.Item onClick={() => setSelectedModel("First")}>First</Dropdown.Item>
-                        <Dropdown.Item onClick={() => setSelectedModel("Second")}>Second</Dropdown.Item>
-                        <Dropdown.Item onClick={() => setSelectedModel("Third")}>Third</Dropdown.Item>
+                    <DropdownButton id="dropdown-basic-button" title={selectIndex || "индекс"} drop="up">
+                        {indexes.map((index) => (
+                            <Dropdown.Item key={index}
+                                           onClick={() => setSelectIndex(index)}>{index}
+                            </Dropdown.Item>
+                        ))}
                     </DropdownButton>
                 </Col>
                 <Col xs="auto">

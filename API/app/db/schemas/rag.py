@@ -6,4 +6,5 @@ class RagResponse(BaseModel):
 
 
 class RagQuestion(BaseModel):
+    index: str
     question: str
