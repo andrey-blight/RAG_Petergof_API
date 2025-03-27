@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, select
+from sqlalchemy import Column, Integer, String, DateTime, select, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +13,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     email = Column(String)
     hashed_password = Column(String)
+    is_admin = Column(Boolean, default=False)
 
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 

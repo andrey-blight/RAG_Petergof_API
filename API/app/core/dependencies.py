@@ -33,3 +33,8 @@ async def validate_user(token: Annotated[str, Depends(oauth2_scheme)],
 
     except InvalidTokenError:
         raise credentials_exception
+
+
+def validate_admin_user(user: User = Depends(validate_user)):
+    if not user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
