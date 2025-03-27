@@ -18,7 +18,7 @@ load_dotenv()
 
 YC_API_KEY = os.getenv("YC_API_KEY")
 YC_FOLDER_ID = os.getenv("YC_FOLDER_ID")
-USING_FILES_PATH = "data/using_files/files.txt"
+USING_FILES_PATH = "rag/data/using_files/files.txt"
 
 def preprocess_text(text):
     text = re.sub(r"[^\w\s]", "", text).lower()
@@ -34,18 +34,18 @@ def get_selected_files():
                 files.append(filename)
     return files
 
-def get_answer(index_name, question):
+async def get_answer(index_name, question):
     t = time()
-    index = faiss.read_index(f"data/rag/index_{index_name}.faiss")
+    index = faiss.read_index(f"rag/data/rag/index_{index_name}.faiss")
     
     #selected_files = get_selected_files()
-    with open(f"data/rag/metadata_{index_name}.pkl", "rb") as f:
+    with open(f"rag/data/rag/metadata_{index_name}.pkl", "rb") as f:
         metadata = pickle.load(f)
 
-    with open(f"data/rag/chunks_{index_name}.pkl", "rb") as f:
+    with open(f"rag/data/rag/chunks_{index_name}.pkl", "rb") as f:
         chunks = pickle.load(f)
         
-    with open(f"data/rag/bm25_{index_name}.pkl", "rb") as f:
+    with open(f"rag/data/rag/bm25_{index_name}.pkl", "rb") as f:
         bm25 = pickle.load(f)
         
     print("Openings:", time() - t)

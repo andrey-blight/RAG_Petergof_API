@@ -2,7 +2,7 @@ import os
 import json
 
 def get_indexes():
-    list_indexes_filepath = "data/metadata/list_indexes.json"
+    list_indexes_filepath = "rag/data/metadata/list_indexes.json"
     list_indexes = {}
     if os.path.exists(list_indexes_filepath):
         with open(list_indexes_filepath, "r", encoding="utf-8") as f:
@@ -12,7 +12,7 @@ def get_indexes():
     
 
 def get_files_by_index_name(name):
-    list_indexes_filepath = "data/metadata/list_indexes.json"
+    list_indexes_filepath = "rag/data/metadata/list_indexes.json"
     list_indexes = {}
     if os.path.exists(list_indexes_filepath):
         with open(list_indexes_filepath, "r", encoding="utf-8") as f:

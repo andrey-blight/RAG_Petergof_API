@@ -20,11 +20,11 @@ YC_API_KEY = os.getenv("YC_API_KEY")
 YC_FOLDER_ID = os.getenv("YC_FOLDER_ID")
 
 
-RAG_PATH = "data/rag"
-METADATA_PATH = "data/metadata"
-CHUNKS_PATH = "data/chunks"
-EMBEDS_PATH = "data/embeddings"
-USING_FILES_PATH = "data/using_files/files.txt"
+RAG_PATH = "rag/data/rag"
+METADATA_PATH = "rag/data/metadata"
+CHUNKS_PATH = "rag/data/chunks"
+EMBEDS_PATH = "rag/data/embeddings"
+USING_FILES_PATH = "rag/data/using_files/files.txt"
 
 
 def preprocess_text(text):
