@@ -79,7 +79,6 @@ const ChatComponent = () => {
     };
 
 
-
     return (
         <Container className="d-flex flex-column vh-100 border shadow-lg">
             <Nav
@@ -96,7 +95,7 @@ const ChatComponent = () => {
                             <Nav.Link eventKey="link-1">Добавить файл</Nav.Link>
                         </Nav.Item>
                         <Nav.Item>
-                            <Nav.Link eventKey="link-2">Создать индекс</Nav.Link>
+                            <Nav.Link href="/index">Создать индекс</Nav.Link>
                         </Nav.Item>
                     </>
                 )}
