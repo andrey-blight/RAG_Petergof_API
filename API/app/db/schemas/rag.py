@@ -1,8 +1,12 @@
 from pydantic import BaseModel
 
 
-class RagResponse(BaseModel):
-    answer: str
+class TaskResponse(BaseModel):
+    task_id: str
+
+
+class StatusResponse(BaseModel):
+    status: str
 
 
 class RagQuestion(BaseModel):
