@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Button, Form, Container, Row, Col, Card, DropdownButton, ButtonGroup} from "react-bootstrap";
+import {Button, Form, Container, Row, Col, Card, DropdownButton, ButtonGroup, Spinner} from "react-bootstrap";
 import Dropdown from 'react-bootstrap/Dropdown';
 import {askQuestion} from "../api/SendQuestion";
 import {useNavigate} from "react-router-dom";
@@ -15,6 +15,7 @@ const ChatComponent = () => {
     const [indexes, setIndexes] = useState([]);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
+    const [asking, setAsking] = useState(false);
     const [selectIndex, setSelectIndex] = useState(indexes[0]);
     const [messageForCorrection, setMessageForCorrection] = useState("");
     const [questionForCorrection, setQuestionForCorrection] = useState("");
@@ -39,6 +40,7 @@ const ChatComponent = () => {
         const newMessage = {id: messages.length + 1, text: input, sender: "user"};
         setMessages([...messages, newMessage]);
         setInput("");
+        setAsking(true);
 
         const botResponse = {
             id: messages.length + 2,
@@ -47,6 +49,7 @@ const ChatComponent = () => {
             liked: null
         };
         setMessages((prev) => [...prev, botResponse]);
+        setAsking(false);
     };
 
     const handleLike = async (id, is_like) => {
@@ -173,7 +176,10 @@ const ChatComponent = () => {
                     />
                 </Col>
                 <Col xs="auto">
-                    <Button onClick={sendMessage}>Отправить</Button>
+                    <Button onClick={sendMessage} disabled={asking}>
+                        {asking && <Spinner animation="border" size="sm" className="me-2"/>}
+                        Отправить
+                    </Button>
                 </Col>
                 <Col xs="auto">
                     <DropdownButton id="dropdown-basic-button" title={selectIndex || "индекс"} drop="up">
