@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile
 
 from app.core.dependencies import validate_user, validate_admin_user
 from rag import get_files as get_files_from_rag
@@ -17,3 +17,10 @@ async def get_files():
 @router.get("/indexes", status_code=200, response_model=IndexesResponse)
 async def get_indexes():
     return IndexesResponse(indexes=get_indexes_from_rag())
+
+
+@router.post("/files", dependencies=[Depends(validate_admin_user)])
+async def create_upload_file(file: UploadFile):
+    content = await file.read()
+
+    return {"filename": file.filename}

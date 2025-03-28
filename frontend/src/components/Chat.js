@@ -95,7 +95,7 @@ const ChatComponent = () => {
                 {showTabs && (
                     <>
                         <Nav.Item>
-                            <Nav.Link eventKey="link-1">Добавить файл</Nav.Link>
+                            <Nav.Link href="/file">Добавить файл</Nav.Link>
                         </Nav.Item>
                         <Nav.Item>
                             <Nav.Link href="/index">Создать индекс</Nav.Link>

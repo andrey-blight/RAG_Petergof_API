@@ -41,4 +41,6 @@ async def check_status(task_id: str):
         raise HTTPException(status_code=404, detail="Task not found")
     if not tasks[task_id]:
         raise HTTPException(status_code=404, detail="Still running")
-    return StatusResponse(status=tasks[task_id])
+    response = tasks[task_id]
+    tasks.pop(task_id)
+    return StatusResponse(status=response)
