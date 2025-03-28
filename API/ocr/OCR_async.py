@@ -77,7 +77,7 @@ class YandexOCRAsync:
         """
         url = f"https://ocr.api.cloud.yandex.net/ocr/v1/getRecognition?operationId={operation_id}"
         
-        for i in range(max_retries):
+        for _ in range(max_retries):
             async with session.get(url, headers=self.headers) as response:
                 if response.status == 200:
                     return await response.json()
