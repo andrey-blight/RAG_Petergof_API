@@ -8,7 +8,6 @@ export const askQuestion = async (index, user_question, navigate) => {
     const accessToken = localStorage.getItem("access_token");
 
     try {
-        // 1. Отправляем запрос на генерацию ответа и получаем task_id
         const response = await axios.post(askUrl, {
             'index': index,
             'question': user_question

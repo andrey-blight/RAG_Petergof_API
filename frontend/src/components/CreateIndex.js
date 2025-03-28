@@ -1,13 +1,24 @@
-import React, {useState} from "react";
-import {Button, Form, ListGroup, Container, Row, Col, Spinner} from "react-bootstrap";
+import React, {useEffect, useState} from "react";
+import {Button, Form, ListGroup, Container, Spinner} from "react-bootstrap";
+import {getFiles} from "../api/GetFiles";
+import {useNavigate} from "react-router-dom";
 
 const CreateIndex = () => {
-    const [files, setFiles] = useState([
-        {id: 1, name: "file1.txt", checked: false},
-        {id: 2, name: "file2.pdf", checked: false},
-        {id: 3, name: "file3.docx", checked: false}
-    ]);
-    const [processing, setProcessing] = useState(true);
+    const [files, setFiles] = useState([]);
+    const [processing, setProcessing] = useState(false);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchFiles = async () => {
+            const files = (await getFiles(navigate)).map((name, index) => ({
+                id: index + 1,
+                name: name,
+                checked: false
+            }));
+            setFiles(files || []);
+        };
+        fetchFiles();
+    }, [navigate]);
 
     const toggleFile = (id) => {
         setFiles(files.map(file => file.id === id ? {...file, checked: !file.checked} : file));
