@@ -6,6 +6,10 @@ import asyncio
 from OCR_async import YandexOCRAsync 
 from dotenv import load_dotenv
 
+run_mark: bool = False
+def is_running():
+    return run_mark
+
 def delete_garbage(pdf_folder):
     """
     Removes unnecessary files.
@@ -35,6 +39,7 @@ s3_client = boto3.client(
     aws_secret_access_key=SECRET_KEY,
 )
 
+run_mark = True
 ocr = YandexOCRAsync(IAM_TOKEN, FOLDER_ID)
 
 PDF_FOLDER = "./new_pdf_files"
@@ -61,6 +66,7 @@ for pdf_file in pdf_files:
     print(f"Обрабатываем файл: {pdf_file}")
     all_jsons = asyncio.run(ocr.process_pdf(pdf_file))
     print(f"Распознанный текст сохранён")
+    
     processed_files += all_jsons
     processed_files.sort(key=lambda x: x["page"])
 
@@ -94,6 +100,7 @@ for pdf_file in pdf_files:
         print("Текст содержит вложенные структуры данных")
         
     delete_garbage(pdf_folder=CURRENT_DIRECTORY)
-
+    
 for pdf_file in pdf_files:
     os.remove(pdf_file)
+run_mark = False
