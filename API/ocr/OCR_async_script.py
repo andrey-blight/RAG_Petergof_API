@@ -4,11 +4,15 @@ import boto3
 import re
 import asyncio
 from OCR_async import YandexOCRAsync 
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values, set_key
+from pathlib import Path 
 
-run_mark: bool = False
+flag_path = Path("Flag.env")
+def change_flag(value: bool):
+    set_key(flag_path, "IS_RUNNING", f"{value}")
+
 def is_running():
-    return run_mark
+    return dotenv_values(flag_path).get("IS_RUNNING")
 
 def delete_garbage(pdf_folder):
     """
@@ -24,6 +28,8 @@ def delete_garbage(pdf_folder):
             except Exception as e:
                 print(f'Не удалось удалить файл {file_path}. Ошибка: {e}')
 
+
+change_flag(True)
 load_dotenv("consts.env")
 
 FOLDER_ID = os.getenv("FOLDER_ID")
@@ -39,7 +45,6 @@ s3_client = boto3.client(
     aws_secret_access_key=SECRET_KEY,
 )
 
-run_mark = True
 ocr = YandexOCRAsync(IAM_TOKEN, FOLDER_ID)
 
 PDF_FOLDER = "./new_pdf_files"
@@ -103,4 +108,4 @@ for pdf_file in pdf_files:
     
 for pdf_file in pdf_files:
     os.remove(pdf_file)
-run_mark = False
+change_flag(False)
