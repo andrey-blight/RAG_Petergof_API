@@ -7,12 +7,9 @@ from OCR_async import YandexOCRAsync
 from dotenv import load_dotenv, dotenv_values, set_key
 from pathlib import Path 
 
-flag_path = Path("Flag.env")
-def change_flag(value: bool):
-    set_key(flag_path, "IS_RUNNING", f"{value}")
-
-def is_running():
-    return dotenv_values(flag_path).get("IS_RUNNING")
+is_running = False
+def change_running(value: bool):
+    is_running = value
 
 def delete_garbage(pdf_folder):
     """
@@ -29,7 +26,7 @@ def delete_garbage(pdf_folder):
                 print(f'Не удалось удалить файл {file_path}. Ошибка: {e}')
 
 
-change_flag(True)
+change_running(True)
 load_dotenv("consts.env")
 
 FOLDER_ID = os.getenv("FOLDER_ID")
@@ -108,4 +105,4 @@ for pdf_file in pdf_files:
     
 for pdf_file in pdf_files:
     os.remove(pdf_file)
-change_flag(False)
+change_running(False)
