@@ -1,6 +1,7 @@
 import os
 import json
 import boto3
+import subprocess
 from .OCR_async import YandexOCRAsync
 from dotenv import load_dotenv
 
@@ -37,13 +38,25 @@ class ApiOCR:
                     except Exception as e:
                         print(f'Не удалось удалить файл {file_path}. Ошибка: {e}')
 
+        def get_iam_token():
+            """
+            Get IAM-token
+            """
+            try:
+                result = subprocess.run(["yc", "iam", "create-token"], capture_output=True, text=True, check=True)
+                return result.stdout.strip()
+            except subprocess.CalledProcessError as e:
+                print(f"Error getting token: {e.stderr}")
+                return None
+
+
         self.change_running(True)
         load_dotenv()
         FOLDER_ID = os.getenv("FOLDER_ID")
-        IAM_TOKEN = os.getenv("IAM_TOKEN")
         ACCESS_KEY = os.getenv("ACCESS_KEY")
         SECRET_KEY = os.getenv("SECRET_KEY_OCR")
         BUCKET_NAME = os.getenv("BUCKET_NAME")
+        IAM_TOKEN = get_iam_token()
 
         s3_client = boto3.client(
             "s3",
