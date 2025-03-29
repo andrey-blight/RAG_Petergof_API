@@ -6,6 +6,7 @@ import aiohttp
 from PyPDF2 import PdfReader, PdfWriter
 from tqdm.asyncio import tqdm_asyncio
 
+
 class YandexOCRAsync:
     def __init__(self, iam_token, folder_id):
         """
@@ -22,28 +23,27 @@ class YandexOCRAsync:
         """Encode PDF file to Base64."""
         with open(file_path, 'rb') as file:
             return base64.b64encode(file.read()).decode('utf-8')
-    
+
     def split_pdf(self, input_path, pages_per_chunk=1):
         """
         Split PDF into smaller chunks.
         """
         chunks = []
-        print(input_path)
         reader = PdfReader(input_path)
         total_pages = len(reader.pages)
-        
+
         for start_page in range(0, total_pages, pages_per_chunk):
             end_page = min(start_page + pages_per_chunk, total_pages)
             writer = PdfWriter()
-            
+
             for page_num in range(start_page, end_page):
                 writer.add_page(reader.pages[page_num])
-            
-            chunk_path = f"temp_chunk_{start_page}.pdf"
+
+            chunk_path = f"./ocr/temp_chunk_{start_page}.pdf"
             with open(chunk_path, 'wb') as output:
                 writer.write(output)
             chunks.append((chunk_path, start_page))
-        
+
         return chunks
 
     async def recognize_pdf(self, session, file_path):
@@ -51,18 +51,18 @@ class YandexOCRAsync:
         Async submit PDF for OCR recognition.
         """
         url = "https://ocr.api.cloud.yandex.net/ocr/v1/recognizeTextAsync"
-        
+
         body = {
             "mimeType": "application/pdf",
             "languageCodes": ["*"],
             "model": "page",
             "content": self.encode_pdf(file_path)
         }
-        
+
         async with session.post(
-            url,
-            headers={**self.headers, "Content-Type": "application/json"},
-            json=body
+                url,
+                headers={**self.headers, "Content-Type": "application/json"},
+                json=body
         ) as response:
             if response.status == 200:
                 data = await response.json()
@@ -77,7 +77,7 @@ class YandexOCRAsync:
         Async get OCR operation result with retries.
         """
         url = f"https://ocr.api.cloud.yandex.net/ocr/v1/getRecognition?operationId={operation_id}"
-        
+
         for _ in range(max_retries):
             async with session.get(url, headers=self.headers) as response:
                 if response.status == 200:
@@ -93,10 +93,10 @@ class YandexOCRAsync:
         Extract text blocks with coordinates & bounding box from the OCR result.
         """
         full_text = []
-        
+
         if not ocr_result or 'result' not in ocr_result:
             return ""
-        
+
         result = ocr_result['result']
         t_annot = result.get('textAnnotation', {})
 
@@ -106,13 +106,13 @@ class YandexOCRAsync:
                 if 'text' not in line:
                     continue
                 full_text.append(line['text'])
-        
+
         return '\n'.join(full_text)
 
     async def process_chunk(self, session, chunk_path, page_number, semaphore):
         async with semaphore:
             operation_id = await self.recognize_pdf(session, chunk_path)
-            
+
             ocr_result = await self.get_operation_result(session, operation_id)
             return {
                 "page": page_number + 1,

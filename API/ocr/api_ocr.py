@@ -72,7 +72,7 @@ class ApiOCR:
         result_json = {
             "data": processed_files
         }
-        pdf_name_json = pdf_name + '.json'
+        pdf_name_json = f"./ocr/{pdf_name}" + '.json'
         with open(pdf_name_json, "w", encoding="utf-8") as f:
             json.dump(result_json, f, indent=4, ensure_ascii=False)
 
@@ -84,7 +84,7 @@ class ApiOCR:
         print(f"Файл {pdf_name_json} загружен в бакет {BUCKET_NAME} / started_pdf")
 
         try:
-            pdf_name_txt = pdf_name + '.txt'
+            pdf_name_txt = f"./ocr/{pdf_name}.txt"
             with open(pdf_name_txt, 'w', encoding='utf-8') as f:
                 f.write("\n".join(item["text"] for item in processed_files))
 
