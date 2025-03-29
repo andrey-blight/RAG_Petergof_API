@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from "react";
 import {Form, Button, Spinner, Alert, Container} from "react-bootstrap";
-import axios from "axios";
 import Nav from "react-bootstrap/Nav";
 import {isAdmin} from "../api/IsAdmin";
 import {useNavigate} from "react-router-dom";
 import {checkFileRunning} from "../api/CheckFileRunning";
+import {uploadOcr} from "../api/UploadOcr";
 
 const OcrUpload = () => {
     const [file, setFile] = useState(null);
@@ -39,20 +39,7 @@ const OcrUpload = () => {
         localStorage.setItem('file_loading', "true");
         setError(null);
 
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-            const response = await axios.post("/api/ocr", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
-        } catch (err) {
-            setError("Failed to process file. Please try again.");
-        } finally {
-            setLoading(false);
-        }
+        await uploadOcr(file, navigate);
         setLoading(false);
         localStorage.setItem('file_loading', "false");
     };
