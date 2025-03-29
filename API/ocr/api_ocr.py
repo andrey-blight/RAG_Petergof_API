@@ -1,7 +1,8 @@
 import os
 import json
 import boto3
-from OCR_async import YandexOCRAsync 
+import subprocess
+from OCR_async import YandexOCRAsync
 from dotenv import load_dotenv
 
 class ApiOCR:
@@ -26,7 +27,7 @@ class ApiOCR:
             Removes unnecessary files.
             """
             for file_name in os.listdir(pdf_folder):
-                if file_name.startswith(".pdf") \
+                if file_name.endswith(".pdf") \
                     or file_name.endswith(".txt") \
                     or file_name.endswith(".json"):
                     file_path = os.path.join(pdf_folder, file_name)
@@ -34,16 +35,26 @@ class ApiOCR:
                         os.remove(file_path)
                     except Exception as e:
                         print(f'Не удалось удалить файл {file_path}. Ошибка: {e}')
-
+        
+        def get_iam_token():
+            """
+            Get IAM-token
+            """
+            try:
+                result = subprocess.run(["yc", "iam", "create-token"], capture_output=True, text=True, check=True)
+                return result.stdout.strip()
+            except subprocess.CalledProcessError as e:
+                print(f"Error getting token: {e.stderr}")
+                return None
 
         self.change_running(True)
         load_dotenv("consts.env")
         FOLDER_ID = os.getenv("FOLDER_ID")
-        IAM_TOKEN = os.getenv("IAM_TOKEN")
         ACCESS_KEY = os.getenv("ACCESS_KEY")
         SECRET_KEY = os.getenv("SECRET_KEY")
         BUCKET_NAME = os.getenv("BUCKET_NAME")
-
+        IAM_TOKEN = get_iam_token()
+        
         s3_client = boto3.client(
             "s3",
             endpoint_url="https://storage.yandexcloud.net",
@@ -98,3 +109,4 @@ class ApiOCR:
             
         delete_garbage(pdf_folder=CURRENT_DIRECTORY) 
         self.change_running(False)
+        
