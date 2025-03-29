@@ -79,13 +79,16 @@ class YandexOCRAsync:
         url = f"https://ocr.api.cloud.yandex.net/ocr/v1/getRecognition?operationId={operation_id}"
 
         for _ in range(max_retries):
-            async with session.get(url, headers=self.headers) as response:
-                if response.status == 200:
-                    return await response.json()
-                elif response.status == 404:  # Still processing
-                    await asyncio.sleep(delay)
-                else:
-                    print(f"Failed to get result: {response.status} - {await response.text()}")
+            try:
+                async with session.get(url, headers=self.headers) as response:
+                    if response.status == 200:
+                        return await response.json()
+                    elif response.status == 404:  # Still processing
+                        await asyncio.sleep(delay)
+                    else:
+                        print(f"Failed to get result: {response.status} - {await response.text()}")
+            except Exception as e:
+                print(e)
         print(f"Operation timed out after {max_retries * delay} seconds")
 
     def extract_text_from_result(self, ocr_result):
@@ -112,7 +115,8 @@ class YandexOCRAsync:
     async def process_chunk(self, session, chunk_path, page_number, semaphore):
         async with semaphore:
             operation_id = await self.recognize_pdf(session, chunk_path)
-
+            if operation_id is None:
+                raise Exception("Failed to get operation result")
             ocr_result = await self.get_operation_result(session, operation_id)
             return {
                 "page": page_number + 1,

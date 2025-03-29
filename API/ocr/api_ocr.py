@@ -43,12 +43,12 @@ class ApiOCR:
             Get IAM-token
             """
             try:
-                result = subprocess.run(["yc", "iam", "create-token"], capture_output=True, text=True, check=True)
+                result = subprocess.run(["yc", "iam", "create-token"], capture_output=True,
+                                        text=True, check=True)
                 return result.stdout.strip()
             except subprocess.CalledProcessError as e:
                 print(f"Error getting token: {e.stderr}")
                 return None
-
 
         self.change_running(True)
         load_dotenv()
@@ -75,7 +75,13 @@ class ApiOCR:
         # Send a pdf file for processing
         processed_files = []
         print(f"Обрабатываем файл: {pdf_path}")
-        all_jsons = await ocr.process_pdf(pdf_path)
+        try:
+            all_jsons = await ocr.process_pdf(pdf_path)
+        except Exception as e:
+            print(e)
+            self.change_running(False)
+            delete_garbage(pdf_folder=CURRENT_DIRECTORY)
+            return
         print(f"Распознанный текст сохранён")
 
         processed_files += all_jsons
