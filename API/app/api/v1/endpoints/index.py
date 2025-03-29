@@ -30,7 +30,7 @@ async def push_to_ocr(file: UploadFile):
     if await ocr.is_running():
         return HTTPException(status_code=409, detail="OCR already running")
     content = await file.read()
-    asyncio.create_task(ocr.upload_pdf(content, file.filename))
+    asyncio.create_task(ocr.upload_pdf(content, file.filename[:-4]))
     return 200
 
 

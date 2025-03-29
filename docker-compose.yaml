@@ -23,6 +23,7 @@ services:
       - "8000:8000"
     volumes:
       - ./API:/app
+      - ~/.config/yandex-cloud:/root/.config/yandex-cloud
     env_file:
       - .env
     depends_on:
