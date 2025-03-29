@@ -1,11 +1,15 @@
-from fastapi import APIRouter, Depends, UploadFile
+import asyncio
+
+from fastapi import APIRouter, Depends, UploadFile, HTTPException
 
 from app.core.dependencies import validate_user, validate_admin_user
 from rag import get_files as get_files_from_rag
 from rag import get_indexes as get_indexes_from_rag
-from app.db.schemas import FilesResponse, IndexesResponse
+from ocr import ApiOCR
+from app.db.schemas import FilesResponse, IndexesResponse, OcrStatusResponse
 
 router = APIRouter(dependencies=[Depends(validate_user)])
+ocr = ApiOCR()
 
 
 @router.get("/files", status_code=200, response_model=FilesResponse,
@@ -20,7 +24,15 @@ async def get_indexes():
 
 
 @router.post("/files", dependencies=[Depends(validate_admin_user)])
-async def create_upload_file(file: UploadFile):
+async def push_to_ocr(file: UploadFile):
+    if await ocr.is_running():
+        return HTTPException(status_code=409, detail="OCR already running")
     content = await file.read()
+    asyncio.create_task(ocr.upload_pdf(content, file.filename))
+    return 200
 
-    return {"filename": file.filename}
+
+@router.get("/files/status", dependencies=[Depends(validate_admin_user)],
+            response_model=OcrStatusResponse)
+async def get_ocr_status():
+    return OcrStatusResponse(is_running=await ocr.is_running())

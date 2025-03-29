@@ -28,6 +28,7 @@ class YandexOCRAsync:
         Split PDF into smaller chunks.
         """
         chunks = []
+        print(input_path)
         reader = PdfReader(input_path)
         total_pages = len(reader.pages)
         
