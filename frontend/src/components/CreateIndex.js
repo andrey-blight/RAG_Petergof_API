@@ -9,14 +9,15 @@ const CreateIndex = () => {
     const [files, setFiles] = useState([]);
     const [processing, setProcessing] = useState(false);
     const navigate = useNavigate();
-
+    console.log("try load index");
 
     useEffect(() => {
         const fetchFiles = async () => {
-            const is_admin = await isAdmin(navigate)
-            if (!is_admin) {
-                navigate("/chat")
-            }
+            const is_admin = await isAdmin(navigate);
+            console.log(is_admin);
+            // if (!is_admin) {
+            //     navigate("/chat")
+            // }
             const files = (await getFiles(navigate)).map((name, index) => ({
                 id: index + 1,
                 name: name,

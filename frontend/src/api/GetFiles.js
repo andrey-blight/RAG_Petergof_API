@@ -6,6 +6,7 @@ export const getFiles = async (navigate) => {
 
     const accessToken = localStorage.getItem("access_token");
     try {
+        console.log("trying to get files");
         const response = await axios.get(askUrl, {
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
