@@ -7,7 +7,7 @@ import {isAdmin} from "../api/IsAdmin";
 
 const CreateIndex = () => {
     const [files, setFiles] = useState([]);
-    const [processing, setProcessing] = useState(false);
+    // const [processing, setProcessing] = useState(false);
     const navigate = useNavigate();
     console.log("try load index");
 
@@ -76,8 +76,8 @@ const CreateIndex = () => {
                 ))}
             </ListGroup>
 
-            <Button onClick={uploadIndex} disabled={processing} className="mt-4">
-                {processing && <Spinner animation="border" size="sm" className="me-2"/>}
+            <Button onClick={uploadIndex} disabled={false} className="mt-4">
+                {false && <Spinner animation="border" size="sm" className="me-2"/>}
                 Загрузить индекс
             </Button>
 

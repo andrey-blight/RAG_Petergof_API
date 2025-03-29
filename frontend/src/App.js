@@ -14,7 +14,7 @@ function App() {
                 <Route path="/login" element={<LoginForm/>}/>
                 <Route path="register" element={<RegisterForm/>}/>
                 <Route path="/chat" element={<ChatComponent/>}/>
-                <Route path="/index" element={<CreateIndex/>}/>
+                <Route path="/create" element={<CreateIndex/>}/>
                 <Route path="/file" element={<OcrUpload/>}/>
                 <Route path="*" element={<Navigate to={isAuthenticated ? "/chat" : "/login"}/>}/>
             </Routes>
