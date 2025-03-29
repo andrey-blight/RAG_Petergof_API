@@ -98,7 +98,7 @@ const ChatComponent = () => {
                             <Nav.Link href="/file">Добавить файл</Nav.Link>
                         </Nav.Item>
                         <Nav.Item>
-                            <Nav.Link href="/index">Создать индекс</Nav.Link>
+                            <Nav.Link href="/create_index">Создать индекс</Nav.Link>
                         </Nav.Item>
                     </>
                 )}

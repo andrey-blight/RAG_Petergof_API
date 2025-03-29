@@ -7,17 +7,15 @@ import {isAdmin} from "../api/IsAdmin";
 
 const CreateIndex = () => {
     const [files, setFiles] = useState([]);
-    // const [processing, setProcessing] = useState(false);
+    const [processing, setProcessing] = useState(false);
     const navigate = useNavigate();
-    console.log("try load index");
 
     useEffect(() => {
         const fetchFiles = async () => {
             const is_admin = await isAdmin(navigate);
-            console.log(is_admin);
-            // if (!is_admin) {
-            //     navigate("/chat")
-            // }
+            if (!is_admin) {
+                navigate("/chat")
+            }
             const files = (await getFiles(navigate)).map((name, index) => ({
                 id: index + 1,
                 name: name,
@@ -55,7 +53,7 @@ const CreateIndex = () => {
                     <Nav.Link href="/file">Добавить файл</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                    <Nav.Link href="/index">Создать индекс</Nav.Link>
+                    <Nav.Link href="/create_index">Создать индекс</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
                     <Nav.Link href="/login">Выйти из аккаунта</Nav.Link>
@@ -76,8 +74,8 @@ const CreateIndex = () => {
                 ))}
             </ListGroup>
 
-            <Button onClick={uploadIndex} disabled={false} className="mt-4">
-                {false && <Spinner animation="border" size="sm" className="me-2"/>}
+            <Button onClick={uploadIndex} disabled={processing} className="mt-4">
+                {processing && <Spinner animation="border" size="sm" className="me-2"/>}
                 Загрузить индекс
             </Button>
 
