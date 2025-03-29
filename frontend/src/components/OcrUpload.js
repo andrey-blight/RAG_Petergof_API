@@ -4,11 +4,11 @@ import axios from "axios";
 import Nav from "react-bootstrap/Nav";
 import {isAdmin} from "../api/IsAdmin";
 import {useNavigate} from "react-router-dom";
+import {checkFileRunning} from "../api/CheckFileRunning";
 
 const OcrUpload = () => {
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState("");
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
@@ -18,6 +18,8 @@ const OcrUpload = () => {
             if (!is_admin) {
                 navigate("/chat")
             }
+            await checkFileRunning();
+            setLoading(localStorage.getItem("file_loading") === "true")
         };
         fetchAllow();
     }, [navigate]);
@@ -34,8 +36,8 @@ const OcrUpload = () => {
         }
 
         setLoading(true);
+        localStorage.setItem('file_loading', "true");
         setError(null);
-        setResult("");
 
         const formData = new FormData();
         formData.append("file", file);
@@ -46,12 +48,13 @@ const OcrUpload = () => {
                     "Content-Type": "multipart/form-data",
                 },
             });
-            setResult(response.data.text);
         } catch (err) {
             setError("Failed to process file. Please try again.");
         } finally {
             setLoading(false);
         }
+        setLoading(false);
+        localStorage.setItem('file_loading', "false");
     };
 
     return (
@@ -86,7 +89,6 @@ const OcrUpload = () => {
                 </Button>
             </Form>
             {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
-            {result && <Alert variant="success" className="mt-3">{result}</Alert>}
         </Container>
     );
 };

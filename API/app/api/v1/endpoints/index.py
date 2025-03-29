@@ -25,6 +25,8 @@ async def get_indexes():
 
 @router.post("/files", dependencies=[Depends(validate_admin_user)])
 async def push_to_ocr(file: UploadFile):
+    if file.filename in get_files_from_rag():
+        raise HTTPException(status_code=409, detail="File already uploaded")
     if await ocr.is_running():
         return HTTPException(status_code=409, detail="OCR already running")
     content = await file.read()
