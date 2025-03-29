@@ -2,14 +2,21 @@ import React, {useEffect, useState} from "react";
 import {Button, Form, ListGroup, Container, Spinner} from "react-bootstrap";
 import {getFiles} from "../api/GetFiles";
 import {useNavigate} from "react-router-dom";
+import Nav from "react-bootstrap/Nav";
+import {isAdmin} from "../api/IsAdmin";
 
 const CreateIndex = () => {
     const [files, setFiles] = useState([]);
     const [processing, setProcessing] = useState(false);
     const navigate = useNavigate();
 
+
     useEffect(() => {
         const fetchFiles = async () => {
+            const is_admin = await isAdmin(navigate)
+            if (!is_admin) {
+                navigate("/chat")
+            }
             const files = (await getFiles(navigate)).map((name, index) => ({
                 id: index + 1,
                 name: name,
@@ -36,6 +43,24 @@ const CreateIndex = () => {
 
     return (
         <Container className="mt-4">
+            <Nav
+                activeKey="/index"
+                variant="tabs"
+            >
+                <Nav.Item>
+                    <Nav.Link href="/chat">Чат</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                    <Nav.Link href="/file">Добавить файл</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                    <Nav.Link href="/index">Создать индекс</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                    <Nav.Link href="/login">Выйти из аккаунта</Nav.Link>
+                </Nav.Item>
+            </Nav>
+
             <h3>Выберите файлы для загрузки индекса</h3>
             <ListGroup>
                 {files.map(file => (

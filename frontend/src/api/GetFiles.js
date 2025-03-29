@@ -23,7 +23,7 @@ export const getFiles = async (navigate) => {
             }
 
         } else if (error.response.status === 403) {
-            navigate("/chat");
+            console.log("not admin");
         } else {
             console.error('API Error:', error.response?.data || error.message);
         }
