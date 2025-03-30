@@ -68,6 +68,7 @@ class ApiOCR:
         ocr = YandexOCRAsync(IAM_TOKEN, FOLDER_ID)
 
         CURRENT_DIRECTORY = "./ocr"
+        delete_garbage(pdf_folder=CURRENT_DIRECTORY)
         pdf_path = os.path.join(CURRENT_DIRECTORY, pdf_name)
         with open(pdf_path, "wb") as f:
             f.write(pdf_file)
@@ -98,9 +99,9 @@ class ApiOCR:
         s3_client.upload_file(
             pdf_name_json,
             BUCKET_NAME,
-            os.path.join("started_pdf", os.path.basename(pdf_name_json))
+            os.path.join("knowledge/data_0", os.path.basename(pdf_name_json))
         )
-        print(f"Файл {pdf_name_json} загружен в бакет {BUCKET_NAME} / started_pdf")
+        print(f"Файл {pdf_name_json} загружен в бакет {BUCKET_NAME} / knowledge/data_0")
 
         try:
             pdf_name_txt = f"./ocr/{pdf_name}.txt"
@@ -115,6 +116,6 @@ class ApiOCR:
             print(f"Файл {pdf_name_txt} загружен в бакет {BUCKET_NAME} / started_pdf")
         except:
             print("Текст содержит вложенные структуры данных")
-
+        
         delete_garbage(pdf_folder=CURRENT_DIRECTORY)
         self.change_running(False)
