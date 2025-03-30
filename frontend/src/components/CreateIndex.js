@@ -4,10 +4,13 @@ import {getFiles} from "../api/GetFiles";
 import {useNavigate} from "react-router-dom";
 import Nav from "react-bootstrap/Nav";
 import {isAdmin} from "../api/IsAdmin";
+import {uploadIndexApi} from "../api/UploadIndex";
+import {checkIndexRunning} from "../api/CheckIndexRunning";
 
 const CreateIndex = () => {
     const [files, setFiles] = useState([]);
     const [processing, setProcessing] = useState(false);
+    const [input, setInput] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -22,6 +25,7 @@ const CreateIndex = () => {
                 checked: false
             }));
             setFiles(files || []);
+            await checkIndexRunning(navigate);
             setProcessing(localStorage.getItem("index_loading") === "true");
         };
         fetchFiles();
@@ -31,15 +35,18 @@ const CreateIndex = () => {
         setFiles(files.map(file => file.id === id ? {...file, checked: !file.checked} : file));
     };
 
-    const uploadIndex = () => {
+    const uploadIndexButton = async () => {
         const selectedFiles = files.filter(file => file.checked);
         if (selectedFiles.length === 0) {
             alert("Выберите хотя бы один файл для загрузки индекса");
             return;
         }
         const listFiles = selectedFiles.map(file => file.name);
-        console.log("Загружаем индекс для файлов:", listFiles);
-        alert(`Индекс загружен для: ${selectedFiles.map(f => f.name).join(", ")}`);
+        localStorage.setItem('index_loading', "true");
+        setProcessing(true);
+        await uploadIndexApi(listFiles, input, navigate);
+        localStorage.setItem('index_loading', "false");
+        setProcessing(false);
     };
 
     return (
@@ -76,7 +83,15 @@ const CreateIndex = () => {
                 ))}
             </ListGroup>
 
-            <Button onClick={uploadIndex} disabled={processing} className="mt-4">
+            <Form.Control
+                className="mt-4"
+                as="textarea"
+                placeholder="Введите название индекса"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+            />
+
+            <Button onClick={uploadIndexButton} disabled={processing} className="mt-4">
                 {processing && <Spinner animation="border" size="sm" className="me-2"/>}
                 Загрузить индекс
             </Button>

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import {refreshToken} from "./GetToken";
 
-export const uploadIndex = async (file_names, name, navigate) => {
+export const uploadIndexApi = async (file_names, name, navigate) => {
     const uploadURL = process.env.REACT_APP_API_URL + "/indexes";
     const statusUrl = process.env.REACT_APP_API_URL + "/indexes/status";
 
@@ -38,7 +38,7 @@ export const uploadIndex = async (file_names, name, navigate) => {
     } catch (error) {
         if (error.response?.status === 401) {
             if (await refreshToken(navigate)) {
-                return await uploadIndex(file_names, name, navigate);
+                return await uploadIndexApi(file_names, name, navigate);
             } else {
                 navigate("/login");
             }
