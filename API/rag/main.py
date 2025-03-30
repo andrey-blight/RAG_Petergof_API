@@ -9,6 +9,8 @@ from yandex_cloud_ml_sdk import YCloudML
 from transformers import AutoModel, AutoTokenizer
 import torch
 from dotenv import load_dotenv
+import boto3
+import io
 
 from rank_bm25 import BM25Okapi
 import re
@@ -18,35 +20,46 @@ load_dotenv()
 
 YC_API_KEY = os.getenv("YC_API_KEY")
 YC_FOLDER_ID = os.getenv("YC_FOLDER_ID")
-USING_FILES_PATH = "rag/data/using_files/files.txt"
+ACCESS_KEY=os.getenv("ACCESS_KEY")
+SECRET_KEY=os.getenv("SECRET_KEY")
+BUCKET_NAME = "markup-baket"
+RAG_PATH = "data/rag"
 
 def preprocess_text(text):
     text = re.sub(r"[^\w\s]", "", text).lower()
     return text.split()
 
 
-def get_selected_files():
-    files = []
-    with open(USING_FILES_PATH, "r", encoding="utf-8") as file:
-        for line in file.readlines():
-            filename = line.strip()
-            if filename:
-                files.append(filename)
-    return files
-
-async def get_answer(index_name, question):
+def get_answer(index_name, question):
     t = time()
-    index = faiss.read_index(f"rag/data/rag/index_{index_name}.faiss")
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url="https://storage.yandexcloud.net",
+        aws_access_key_id=ACCESS_KEY,
+        aws_secret_access_key=SECRET_KEY,
+    )
+    # index = faiss.read_index(f"data/rag/index_{index_name}.faiss")
     
-    #selected_files = get_selected_files()
-    with open(f"rag/data/rag/metadata_{index_name}.pkl", "rb") as f:
-        metadata = pickle.load(f)
+    LOCAL_FILE = f"/tmp/index_{index_name}.faiss"
+    
+    s3_client.download_file(BUCKET_NAME, f"{RAG_PATH}/index_{index_name}.faiss", LOCAL_FILE)
+    index = faiss.read_index(LOCAL_FILE)
+    os.remove(LOCAL_FILE)
+    
+    response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{RAG_PATH}/metadata_{index_name}.pkl")
+    pickle_buffer = io.BytesIO(response['Body'].read())
+    metadata = pickle.load(pickle_buffer)
 
-    with open(f"rag/data/rag/chunks_{index_name}.pkl", "rb") as f:
-        chunks = pickle.load(f)
+    response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{RAG_PATH}/chunks_{index_name}.pkl")
+    pickle_buffer = io.BytesIO(response['Body'].read())
+    chunks = pickle.load(pickle_buffer)
         
-    with open(f"rag/data/rag/bm25_{index_name}.pkl", "rb") as f:
-        bm25 = pickle.load(f)
+    # with open(f"data/rag/bm25_{index_name}.pkl", "rb") as f:
+    #     bm25 = pickle.load(f)
+    
+    response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{RAG_PATH}/bm25_{index_name}.pkl")
+    pickle_buffer = io.BytesIO(response['Body'].read())
+    bm25 = pickle.load(pickle_buffer)
         
     print("Openings:", time() - t)
     t = time()
@@ -87,7 +100,7 @@ async def get_answer(index_name, question):
     ]
     print("Forming result:", time() - t)
     t = time()
-    #print(result)
+    # print(result)
     resultt = sdk.models.completions("yandexgpt").configure(temperature=0.2).run(messages)
     print("YaGPT time:", time() - t)
     

@@ -1,4 +1,5 @@
 import os
+import io
 import sys
 import faiss
 import numpy as np
@@ -10,21 +11,24 @@ from dotenv import load_dotenv
 from yandex_cloud_ml_sdk import YCloudML
 from tqdm import tqdm
 import json
-from .get_indexes import get_indexes
+from get_indexes import get_indexes
 from rank_bm25 import BM25Okapi
 import re
+import boto3
 
 load_dotenv()
 DATA_DIR = os.getenv("DATA_DIR")
 YC_API_KEY = os.getenv("YC_API_KEY")
 YC_FOLDER_ID = os.getenv("YC_FOLDER_ID")
+ACCESS_KEY=os.getenv("ACCESS_KEY")
+SECRET_KEY=os.getenv("SECRET_KEY")
+BUCKET_NAME = "markup-baket"
 
-
-RAG_PATH = "rag/data/rag"
-METADATA_PATH = "rag/data/metadata"
-CHUNKS_PATH = "rag/data/chunks"
-EMBEDS_PATH = "rag/data/embeddings"
-USING_FILES_PATH = "rag/data/using_files/files.txt"
+RAG_PATH = "data/rag"
+METADATA_PATH = "data/metadata"
+CHUNKS_PATH = "data/chunks"
+EMBEDS_PATH = "data/embeddings"
+USING_FILES_PATH = "data/using_files/files.txt"
 
 
 def preprocess_text(text):
@@ -36,18 +40,28 @@ def create_index(name, selected_files):
         print("Индекс с таким именем уже существует")
         return
     
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url="https://storage.yandexcloud.net",
+        aws_access_key_id=ACCESS_KEY,
+        aws_secret_access_key=SECRET_KEY,
+    )
+    
     meta_path = os.path.join(METADATA_PATH, "metadata.json")
-    if not os.path.exists(meta_path):
-        print("Нет сохранённого индекса.")
-        return
 
-    with open(meta_path, "r", encoding="utf-8") as meta_file:
-        metadata = json.load(meta_file)
+    # with open(meta_path, "r", encoding="utf-8") as meta_file:
+    #     metadata = json.load(meta_file)
+    
+    response = s3_client.get_object(Bucket=BUCKET_NAME, Key=meta_path)['Body'].read().decode('utf-8')
+    
+    if not response:
+        metadata = {}
+    else:
+        metadata = json.loads(response)
 
     if not selected_files:
         print("Нет выбранных файлов для загрузки в индекс.")
         return
-    print(selected_files)
 
     all_embeddings = []
     all_chunks = []
@@ -56,13 +70,18 @@ def create_index(name, selected_files):
     for filename in selected_files:
         if filename not in metadata:
             continue
-
-        metadata[filename]['chunks_file'] = "rag/" + metadata[filename]['chunks_file']
-        metadata[filename]['embedding_file'] = "rag/" + metadata[filename]['embedding_file']
+            
         file_info = metadata[filename]
-        embeddings = np.load(file_info["embedding_file"])
-        with open(file_info["chunks_file"], "r", encoding="utf-8") as f:
-            chunks = json.load(f)
+        response = s3_client.get_object(Bucket=BUCKET_NAME, Key=file_info["embedding_file"])
+        buffer = io.BytesIO(response['Body'].read())
+        
+        embeddings = np.load(buffer)
+        
+        response = s3_client.get_object(Bucket=BUCKET_NAME, Key=file_info["chunks_file"])['Body'].read().decode('utf-8')
+        if not response:
+            chunks = {}
+        else:
+            chunks = json.loads(response)
         
         all_embeddings.append(embeddings)
         all_chunks.extend([elem["text"] for elem in chunks['data']])
@@ -80,33 +99,82 @@ def create_index(name, selected_files):
     index = faiss.IndexHNSWFlat(dimension, M)
     index.hnsw.efConstruction = efConstruction
     index.hnsw.efSearch = 256
-    print("nice")
+    print(len(selected_files))
     
     tokenized_chunks = [preprocess_text(chunk) for chunk in all_chunks]
     bm25 = BM25Okapi(tokenized_chunks)
     
     index.add(all_embeddings)
-
-    faiss.write_index(index, (os.path.join(RAG_PATH, f"index_{name}.faiss")))
     
-    with open(os.path.join(RAG_PATH, f"metadata_{name}.pkl"), "wb") as f:
-        pickle.dump(all_metadata, f)
+    buffer_path = os.path.join(RAG_PATH, f"index_{name}.faiss")
+    LOCAL_FILE = f"tmp/index_{name}.faiss"
+    
+    faiss.write_index(index, LOCAL_FILE)
+    s3_client.upload_file(LOCAL_FILE, BUCKET_NAME, buffer_path)
+    os.remove(LOCAL_FILE)
 
-    with open(os.path.join(RAG_PATH, f"chunks_{name}.pkl"), "wb") as f:
-        pickle.dump(all_chunks, f)
+    #     with open(os.path.join(RAG_PATH, f"metadata_{name}.pkl"), "wb") as f:
+    #         pickle.dump(all_metadata, f)
+                               
+    pickle_buffer = io.BytesIO()
+    pickle.dump(all_metadata, pickle_buffer)
+    pickle_buffer.seek(0)
+
+    s3_client.put_object(
+        Bucket=BUCKET_NAME,
+        Key=os.path.join(RAG_PATH, f"metadata_{name}.pkl"),
+        Body=pickle_buffer.getvalue(),
+        ContentType="application/octet-stream"
+    )
+
+    # with open(os.path.join(RAG_PATH, f"chunks_{name}.pkl"), "wb") as f:
+    #     pickle.dump(all_chunks, f)
+    
+    pickle_buffer = io.BytesIO()
+    pickle.dump(all_chunks, pickle_buffer)
+    pickle_buffer.seek(0)
+
+    s3_client.put_object(
+        Bucket=BUCKET_NAME,
+        Key=os.path.join(RAG_PATH, f"chunks_{name}.pkl"),
+        Body=pickle_buffer.getvalue(),
+        ContentType="application/octet-stream"
+    )
        
-    with open(os.path.join(RAG_PATH, f"bm25_{name}.pkl"), 'wb') as f:
-        pickle.dump(bm25, f)
+    # with open(os.path.join(RAG_PATH, f"bm25_{name}.pkl"), 'wb') as f:
+    #     pickle.dump(bm25, f)
+    
+    pickle_buffer = io.BytesIO()
+    pickle.dump(bm25, pickle_buffer)
+    pickle_buffer.seek(0)
+
+    s3_client.put_object(
+        Bucket=BUCKET_NAME,
+        Key=os.path.join(RAG_PATH, f"bm25_{name}.pkl"),
+        Body=pickle_buffer.getvalue(),
+        ContentType="application/octet-stream"
+    )
     
     list_indexes_path = os.path.join(METADATA_PATH, "list_indexes.json")
-    list_indexes = {}
-    if os.path.exists(list_indexes_path):
-        with open(list_indexes_path, "r", encoding="utf-8") as f:
-            list_indexes = json.load(f)
+                               
+    response = s3_client.get_object(Bucket=BUCKET_NAME, Key=list_indexes_path)['Body'].read().decode('utf-8')
+    
+    if not response:
+        list_indexes = {}
+    else:
+        list_indexes = json.loads(response)
             
     list_indexes[name] = {"files": selected_files}
-    with open(os.path.join(list_indexes_path), "w", encoding="utf-8") as f:
-        json.dump(list_indexes, f, ensure_ascii=False, indent=4)
+                               
+    # with open(os.path.join(list_indexes_path), "w", encoding="utf-8") as f:
+    #     json.dump(list_indexes, f, ensure_ascii=False, indent=4)
+    
+    s3_client.put_object(
+    Bucket=BUCKET_NAME,
+    Key=os.path.join(list_indexes_path),
+    Body=json.dumps(list_indexes, indent=4),
+    ContentType="application/json"
+    )
     
     print(f"Индекс сохранён. Записей: {index.ntotal}")
 
@@ -116,6 +184,8 @@ if __name__ == "__main__":
         print("Недостаточно параметров запуска")
         sys.exit(1)
     
-    lst = ['ещание_Петра_Великого_Российская_история_2010.txt', 'bd3ef0b4c0389a171f8f2e7.txt', 'Военные_журналы_юрналы_Петра_1.txt']
+    example = ['ab83a5d6362983ec339ce0a1ce2b732a.txt', 
+           'Майкова_Военные_журналы_юрналы_Петра_1.txt', 
+           ]
 
-    create_index(sys.argv[1], lst)
+    create_index(sys.argv[1], example)
