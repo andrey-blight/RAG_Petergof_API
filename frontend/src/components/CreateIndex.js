@@ -22,6 +22,7 @@ const CreateIndex = () => {
                 checked: false
             }));
             setFiles(files || []);
+            setProcessing(localStorage.getItem("index_loading") === "true");
         };
         fetchFiles();
     }, [navigate]);
@@ -36,14 +37,15 @@ const CreateIndex = () => {
             alert("Выберите хотя бы один файл для загрузки индекса");
             return;
         }
-        console.log("Загружаем индекс для файлов:", selectedFiles);
+        const listFiles = selectedFiles.map(file => file.name);
+        console.log("Загружаем индекс для файлов:", listFiles);
         alert(`Индекс загружен для: ${selectedFiles.map(f => f.name).join(", ")}`);
     };
 
     return (
         <Container className="mt-4">
             <Nav
-                activeKey="/index"
+                activeKey="/create_index"
                 variant="tabs"
             >
                 <Nav.Item>

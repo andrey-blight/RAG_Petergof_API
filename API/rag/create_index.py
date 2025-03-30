@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from yandex_cloud_ml_sdk import YCloudML
 from tqdm import tqdm
 import json
-from get_indexes import get_indexes
+from .get_indexes import get_indexes
 from rank_bm25 import BM25Okapi
 import re
 
@@ -57,6 +57,8 @@ def create_index(name, selected_files):
         if filename not in metadata:
             continue
 
+        metadata[filename]['chunks_file'] = "rag/" + metadata[filename]['chunks_file']
+        metadata[filename]['embedding_file'] = "rag/" + metadata[filename]['embedding_file']
         file_info = metadata[filename]
         embeddings = np.load(file_info["embedding_file"])
         with open(file_info["chunks_file"], "r", encoding="utf-8") as f:

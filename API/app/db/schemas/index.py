@@ -9,6 +9,11 @@ class IndexesResponse(BaseModel):
     indexes: list[str]
 
 
+class IndexRequest(BaseModel):
+    name: str
+    file_names: list[str]
+
+
 class RagQuestion(BaseModel):
     question: str
 
