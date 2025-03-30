@@ -30,7 +30,7 @@ def preprocess_text(text):
     return text.split()
 
 
-def get_answer(index_name, question):
+async def get_answer(index_name, question):
     t = time()
     s3_client = boto3.client(
         "s3",
