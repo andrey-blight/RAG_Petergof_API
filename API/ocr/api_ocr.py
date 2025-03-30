@@ -98,9 +98,9 @@ class ApiOCR:
         s3_client.upload_file(
             pdf_name_json,
             BUCKET_NAME,
-            os.path.join("started_pdf", os.path.basename(pdf_name_json))
+            os.path.join("knowledge/data_0", os.path.basename(pdf_name_json))
         )
-        print(f"Файл {pdf_name_json} загружен в бакет {BUCKET_NAME} / started_pdf")
+        print(f"Файл {pdf_name_json} загружен в бакет {BUCKET_NAME}/knowledge/data_0")
 
         try:
             pdf_name_txt = f"./ocr/{pdf_name}.txt"
