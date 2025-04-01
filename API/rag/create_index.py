@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from yandex_cloud_ml_sdk import YCloudML
 from tqdm import tqdm
 import json
-from get_indexes import get_indexes
+from .get_indexes import get_indexes
 from rank_bm25 import BM25Okapi
 import re
 import boto3
@@ -21,7 +21,7 @@ DATA_DIR = os.getenv("DATA_DIR")
 YC_API_KEY = os.getenv("YC_API_KEY")
 YC_FOLDER_ID = os.getenv("YC_FOLDER_ID")
 ACCESS_KEY=os.getenv("ACCESS_KEY")
-SECRET_KEY=os.getenv("SECRET_KEY")
+SECRET_KEY=os.getenv("SECRET_KEY_OCR")
 BUCKET_NAME = "markup-baket"
 
 RAG_PATH = "data/rag"

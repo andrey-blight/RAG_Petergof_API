@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 ACCESS_KEY=os.getenv("ACCESS_KEY")
-SECRET_KEY=os.getenv("SECRET_KEY")
+SECRET_KEY=os.getenv("SECRET_KEY_OCR")
 BUCKET_NAME = "markup-baket"
 
 

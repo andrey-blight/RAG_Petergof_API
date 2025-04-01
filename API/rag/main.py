@@ -21,7 +21,7 @@ load_dotenv()
 YC_API_KEY = os.getenv("YC_API_KEY")
 YC_FOLDER_ID = os.getenv("YC_FOLDER_ID")
 ACCESS_KEY=os.getenv("ACCESS_KEY")
-SECRET_KEY=os.getenv("SECRET_KEY")
+SECRET_KEY=os.getenv("SECRET_KEY_OCR")
 BUCKET_NAME = "markup-baket"
 RAG_PATH = "data/rag"
 
