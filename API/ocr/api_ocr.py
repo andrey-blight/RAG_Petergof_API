@@ -68,6 +68,7 @@ class ApiOCR:
         ocr = YandexOCRAsync(IAM_TOKEN, FOLDER_ID)
 
         CURRENT_DIRECTORY = "./ocr"
+        delete_garbage(pdf_folder=CURRENT_DIRECTORY)
         pdf_path = os.path.join(CURRENT_DIRECTORY, pdf_name)
         with open(pdf_path, "wb") as f:
             f.write(pdf_file)
@@ -100,7 +101,7 @@ class ApiOCR:
             BUCKET_NAME,
             os.path.join("knowledge/data_0", os.path.basename(pdf_name_json))
         )
-        print(f"Файл {pdf_name_json} загружен в бакет {BUCKET_NAME}/knowledge/data_0")
+        print(f"Файл {pdf_name_json} загружен в бакет {BUCKET_NAME} / knowledge/data_0")
 
         try:
             pdf_name_txt = f"./ocr/{pdf_name}.txt"
