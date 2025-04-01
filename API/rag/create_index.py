@@ -107,8 +107,8 @@ def create_index(name, selected_files):
     index.add(all_embeddings)
     
     buffer_path = os.path.join(RAG_PATH, f"index_{name}.faiss")
-    LOCAL_FILE = f"tmp/index_{name}.faiss"
-    
+    LOCAL_FILE = f"rag/tmp/index_{name}.faiss"
+
     faiss.write_index(index, LOCAL_FILE)
     s3_client.upload_file(LOCAL_FILE, BUCKET_NAME, buffer_path)
     os.remove(LOCAL_FILE)
