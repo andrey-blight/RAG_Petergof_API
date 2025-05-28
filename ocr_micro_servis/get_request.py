@@ -11,7 +11,6 @@ async def process_execution(order):
     """
     if order['type'] == "convert":
         await asyncio.sleep(0.1)
-        
         ocr = api_ocr.ApiOCR()
         new_file = base64.b64decode(order['path'])
         json_data = await ocr.upload_pdf(
