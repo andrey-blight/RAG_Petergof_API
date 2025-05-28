@@ -4,7 +4,7 @@ import boto3
 import subprocess
 from .OCR_async import YandexOCRAsync
 from dotenv import load_dotenv
-
+# from rag import create_embeddings
 
 class ApiOCR:
     def __init__(self):
@@ -24,14 +24,13 @@ class ApiOCR:
         Convert pdf file to json and txt, upload their into S3 
         """
 
-        def delete_garbage(pdf_folder):
+        def delete_garbage(pdf_folder, pdf_name):
             """
             Removes unnecessary files.
             """
             for file_name in os.listdir(pdf_folder):
-                if file_name.endswith(".pdf") \
-                        or file_name.endswith(".txt") \
-                        or file_name.endswith(".json"):
+                if file_name.startswith(f"{pdf_name}") \
+                    or file_name.endswith(".pdf"):
                     file_path = os.path.join(pdf_folder, file_name)
                     try:
                         os.remove(file_path)
@@ -84,6 +83,8 @@ class ApiOCR:
             return
         print(f"Распознанный текст сохранён")
 
+        # Filter json 
+        all_jsons = [item for item in all_jsons if isinstance(item["text"], str)]
         processed_files += all_jsons
         processed_files.sort(key=lambda x: x["page"])
 
@@ -102,8 +103,8 @@ class ApiOCR:
         )
         print(f"Файл {pdf_name_json} загружен в бакет {BUCKET_NAME}/knowledge/data_0")
 
+        pdf_name_txt = f"./ocr/{pdf_name}.txt"
         try:
-            pdf_name_txt = f"./ocr/{pdf_name}.txt"
             with open(pdf_name_txt, 'w', encoding='utf-8') as f:
                 f.write("\n".join(item["text"] for item in processed_files))
 
@@ -116,5 +117,8 @@ class ApiOCR:
         except:
             print("Текст содержит вложенные структуры данных")
 
-        delete_garbage(pdf_folder=CURRENT_DIRECTORY)
+        delete_garbage(pdf_folder=CURRENT_DIRECTORY, pdf_name=pdf_name)
+        
+        # create_embeddings(pdf_name_txt)
+        
         self.change_running(False)
