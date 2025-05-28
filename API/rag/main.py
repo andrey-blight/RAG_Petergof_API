@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 import aiobotocore.session
 import io
 import re
+from get_data_new import get_lists
 from collections import defaultdict
 
 from rank_bm25 import BM25Okapi
@@ -26,9 +27,11 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 BUCKET_NAME = "markup-baket"
 RAG_PATH = "data/rag"
 
+
 def preprocess_text(text):
     text = re.sub(r"[^\w\s]", "", text).lower()
     return text.split()
+
 
 async def download_pickle_object(s3_client, key):
     response = await s3_client.get_object(Bucket=BUCKET_NAME, Key=key)
@@ -36,16 +39,18 @@ async def download_pickle_object(s3_client, key):
         data = await stream.read()
     return pickle.load(io.BytesIO(data))
 
-async def get_answer(index_name, question, indices, top_bm25_indices):
+
+async def get_answer(index_name, question):
     session = aiobotocore.session.get_session()
     async with session.create_client(
-        "s3",
-        region_name="ru-central1",
-        endpoint_url="https://storage.yandexcloud.net",
-        aws_secret_access_key=SECRET_KEY,
-        aws_access_key_id=ACCESS_KEY,
+            "s3",
+            region_name="ru-central1",
+            endpoint_url="https://storage.yandexcloud.net",
+            aws_secret_access_key=SECRET_KEY,
+            aws_access_key_id=ACCESS_KEY,
     ) as s3_client:
 
+        indices, top_bm25_indices = await get_lists(index_name, question)
         metadata_key = f"{RAG_PATH}/metadata_{index_name}.pkl"
         chunks_key = f"{RAG_PATH}/chunks_{index_name}.pkl"
 
@@ -58,7 +63,7 @@ async def get_answer(index_name, question, indices, top_bm25_indices):
     result = ""
     for i, idx in enumerate(indices):
         if idx < len(chunks):
-            result += f"Текст {i+1}:\nФайл: {metadata[idx][0]}, страница: {metadata[idx][1]}\nТекст: {chunks[idx]}\n\n"
+            result += f"Текст {i + 1}:\nФайл: {metadata[idx][0]}, страница: {metadata[idx][1]}\nТекст: {chunks[idx]}\n\n"
 
     top_k = 18
     for i, idx in enumerate(top_bm25_indices):
@@ -84,25 +89,20 @@ async def get_answer(index_name, question, indices, top_bm25_indices):
     )
 
     loop = asyncio.get_running_loop()
-    resultt = await loop.run_in_executor(None, lambda: sdk.models.completions("yandexgpt").configure(temperature=0.2).run(messages))
+    answer = await loop.run_in_executor(None,
+                                         lambda: sdk.models.completions("yandexgpt").configure(temperature=0.2).run(
+                                             messages))
 
     print("YaGPT time:", time() - t)
-    return resultt[0].text
+    return answer[0].text
 
-async def main():
-    if len(sys.argv) < 5:
+
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
         print("Недостаточно параметров запуска")
         sys.exit(1)
 
     index_name = sys.argv[1]
     question = sys.argv[2]
 
-    # Список нужно распарсить из строки
-    indices = list(map(int, sys.argv[3].strip("[]").split(",")))
-    top_bm25_indices = list(map(int, sys.argv[4].strip("[]").split(",")))
-
-    result = await get_answer(index_name, question, indices, top_bm25_indices)
-    print(result)
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(get_answer(index_name, question))

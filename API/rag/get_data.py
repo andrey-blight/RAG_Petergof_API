@@ -1,20 +1,14 @@
 import faiss
 import numpy as np
 import pickle
-import sys
-import os
-from time import time
-from sentence_transformers import SentenceTransformer
-from yandex_cloud_ml_sdk import YCloudML
-from transformers import AutoModel, AutoTokenizer
-import torch
-from dotenv import load_dotenv
-import boto3
 import io
-
-from rank_bm25 import BM25Okapi
 import re
-from collections import defaultdict
+from dotenv import load_dotenv
+import os
+from yandex_cloud_ml_sdk import YCloudML
+from rank_bm25 import BM25Okapi
+import aiobotocore.session
+import asyncio
 
 load_dotenv()
 
@@ -25,75 +19,47 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 BUCKET_NAME = "markup-baket"
 RAG_PATH = "data/rag"
 
-
 def preprocess_text(text):
     text = re.sub(r"[^\w\s]", "", text).lower()
     return text.split()
 
+async def download_s3_bytes(s3_client, key):
+    response = await s3_client.get_object(Bucket=BUCKET_NAME, Key=key)
+    async with response["Body"] as stream:
+        return await stream.read()
 
-def get_data(index_name, question):
-    t = time()
-    s3_client = boto3.client(
+async def get_lists(index_name, question):
+    session = aiobotocore.session.get_session()
+    async with session.create_client(
         "s3",
+        region_name="ru-central1",
         endpoint_url="https://storage.yandexcloud.net",
         aws_access_key_id=ACCESS_KEY,
         aws_secret_access_key=SECRET_KEY,
-    )
-    # index = faiss.read_index(f"data/rag/index_{index_name}.faiss")
+    ) as s3_client:
 
-    LOCAL_FILE = f"/tmp/index_{index_name}.faiss"
 
-    s3_client.download_file(BUCKET_NAME, f"{RAG_PATH}/index_{index_name}.faiss", LOCAL_FILE)
-    index = faiss.read_index(LOCAL_FILE)
-    os.remove(LOCAL_FILE)
+        index_bytes, metadata_bytes, chunks_bytes, bm25_bytes = await asyncio.gather(
+            download_s3_bytes(s3_client, f"{RAG_PATH}/index_{index_name}.faiss"),
+            download_s3_bytes(s3_client, f"{RAG_PATH}/bm25_{index_name}.pkl"),
+        )
 
-    response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{RAG_PATH}/metadata_{index_name}.pkl")
-    pickle_buffer = io.BytesIO(response['Body'].read())
-    metadata = pickle.load(pickle_buffer)
+    reader = faiss.MemoryIOReader()
+    reader.copy_from_buffer(index_bytes)
+    index = faiss.read_index(reader)
 
-    response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{RAG_PATH}/chunks_{index_name}.pkl")
-    pickle_buffer = io.BytesIO(response['Body'].read())
-    chunks = pickle.load(pickle_buffer)
+    bm25 = pickle.loads(bm25_bytes)
 
-    # with open(f"data/rag/bm25_{index_name}.pkl", "rb") as f:
-    #     bm25 = pickle.load(f)
-
-    response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{RAG_PATH}/bm25_{index_name}.pkl")
-    pickle_buffer = io.BytesIO(response['Body'].read())
-    bm25 = pickle.load(pickle_buffer)
-
-    print("Openings:", time() - t)
-    t = time()
-
-    sdk = YCloudML(
-        folder_id=YC_FOLDER_ID,
-        auth=YC_API_KEY,
-    )
-
+    sdk = YCloudML(folder_id=YC_FOLDER_ID, auth=YC_API_KEY)
     query_model = sdk.models.text_embeddings("query")
     query_embedding = np.array([query_model.run(question)], dtype=np.float32)
-    print("Querry embedding:", time() - t)
-    t = time()
 
     top_k = 18
     distances, indices = index.search(query_embedding, top_k)
-    print("Index search:", time() - t)
-    t = time()
 
     top_k_bm25 = 3
     bm25_scores = bm25.get_scores(preprocess_text(question))
     top_bm25_indices = np.argsort(bm25_scores)[-top_k_bm25:][::-1]
-    print("BM25 search:", time() - t)
-    t = time()
 
     return indices[0], top_bm25_indices
 
-
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Недостаточно параметров запуска")
-        sys.exit(1)
-
-    index_name = sys.argv[1]
-    question = sys.argv[2]
-    result = get_data(index_name, question)
