@@ -23,11 +23,13 @@ async def get_answer_from_rag(question_schema: RagQuestion):
     tasks[task_id] = False
 
     def background_task():
-        try:
-            answer = asyncio.run(get_answer(question_schema.index, question_schema.question))
-            tasks[task_id] = answer
-        except Exception as e:
-            tasks[task_id] = f"error: {str(e)}"
+        # try:
+        #     answer = asyncio.run(get_answer(question_schema.index, question_schema.question))
+        #     tasks[task_id] = answer
+        # except Exception as e:
+        #     tasks[task_id] = f"error: {str(e)}"
+        answer = asyncio.run(get_answer(question_schema.index, question_schema.question))
+        tasks[task_id] = answer
 
     thread = threading.Thread(target=background_task)
     thread.start()

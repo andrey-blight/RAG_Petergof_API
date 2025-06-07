@@ -1,3 +1,5 @@
+import pprint
+
 import faiss
 import numpy as np
 import pickle
@@ -15,31 +17,33 @@ load_dotenv()
 YC_API_KEY = os.getenv("YC_API_KEY")
 YC_FOLDER_ID = os.getenv("YC_FOLDER_ID")
 ACCESS_KEY = os.getenv("ACCESS_KEY")
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY_OCR")
 BUCKET_NAME = "markup-baket"
 RAG_PATH = "data/rag"
+
 
 def preprocess_text(text):
     text = re.sub(r"[^\w\s]", "", text).lower()
     return text.split()
+
 
 async def download_s3_bytes(s3_client, key):
     response = await s3_client.get_object(Bucket=BUCKET_NAME, Key=key)
     async with response["Body"] as stream:
         return await stream.read()
 
+
 async def get_lists(index_name, question):
     session = aiobotocore.session.get_session()
     async with session.create_client(
-        "s3",
-        region_name="ru-central1",
-        endpoint_url="https://storage.yandexcloud.net",
-        aws_access_key_id=ACCESS_KEY,
-        aws_secret_access_key=SECRET_KEY,
+            "s3",
+            region_name="ru-central1",
+            endpoint_url="https://storage.yandexcloud.net",
+            aws_access_key_id=ACCESS_KEY,
+            aws_secret_access_key=SECRET_KEY,
     ) as s3_client:
 
-
-        index_bytes, metadata_bytes, chunks_bytes, bm25_bytes = await asyncio.gather(
+        index_bytes, bm25_bytes = await asyncio.gather(
             download_s3_bytes(s3_client, f"{RAG_PATH}/index_{index_name}.faiss"),
             download_s3_bytes(s3_client, f"{RAG_PATH}/bm25_{index_name}.pkl"),
         )
@@ -62,4 +66,3 @@ async def get_lists(index_name, question):
     top_bm25_indices = np.argsort(bm25_scores)[-top_k_bm25:][::-1]
 
     return indices[0], top_bm25_indices
-
