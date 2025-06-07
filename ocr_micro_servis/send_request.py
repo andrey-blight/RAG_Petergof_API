@@ -50,18 +50,25 @@ async def main():
         requests = []
         LINK_DIR = "test_ocr_dir/started_pdf/"
         
-        requests.append({
-            "type": "convert",
-            "link": LINK_DIR,
-            "title": "7-й_Конгресс_18.05_0.pdf",
-            "path_index": 0
-        })
+        # requests.append({
+        #     "type": "convert",
+        #     "link": LINK_DIR,
+        #     "title": "7-й_Конгресс_18.05_0.pdf",
+        #     "path_index": 0
+        # })
+        
+        # requests.append({
+        #     "type": "convert",
+        #     "link": LINK_DIR,
+        #     "title": "7-й_Конгресс_18.05_1.pdf",
+        #     "path_index": 1
+        # })
         
         requests.append({
-            "type": "convert",
-            "link": LINK_DIR,
-            "title": "7-й_Конгресс_18.05_1.pdf",
-            "path_index": 1
+            "type": "merge",
+            "link": "test_ocr_dir/result_pdf/",
+            "title": "7-й_Конгресс_18.05",
+            "path_index": [0, 1]
         })
         
         logger.info("Начало обработки запросов")
