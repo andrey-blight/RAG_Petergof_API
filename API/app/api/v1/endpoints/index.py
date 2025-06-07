@@ -38,6 +38,7 @@ async def create_index(index_request: IndexRequest):
             create_index_from_rag(index_request.name, index_request.file_names)
             index_task = False
         except Exception as e:
+            print(e)
             index_task = False
 
     thread = threading.Thread(target=background_task)

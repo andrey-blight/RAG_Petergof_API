@@ -1,11 +1,10 @@
-from sqlalchemy import Column, Integer, String, DateTime, select, Boolean, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Float, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import Base
-from app.db.schemas import UserCreate
-from app.core import get_hash
+from app.db.schemas import SettingModel
 
 
 class UserSetting(Base):
@@ -28,3 +27,12 @@ class UserSetting(Base):
     def __repr__(self):
         return f"<UserSetting(prompt={self.prompt}, temperature={self.temperature}, count_vector={self.count_vector}, count_fulltext={self.count_fulltext})>"
 
+
+async def apply_update_settings(new_settings: SettingModel, settings: UserSetting,
+                         session: AsyncSession) -> UserSetting:
+    for field, value in new_settings.model_dump(exclude_unset=True).items():
+        setattr(settings, field, value)
+
+    await session.commit()
+    await session.refresh(settings)
+    return settings

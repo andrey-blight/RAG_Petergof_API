@@ -1,9 +1,6 @@
-import pprint
-
 import faiss
 import numpy as np
 import pickle
-import io
 import re
 from dotenv import load_dotenv
 import os

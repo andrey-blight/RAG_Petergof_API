@@ -1,10 +1,7 @@
 import base64
-import json
-import os
 import asyncio
 import aiohttp
 from PyPDF2 import PdfReader, PdfWriter
-from tqdm.asyncio import tqdm_asyncio
 
 
 class YandexOCRAsync:
