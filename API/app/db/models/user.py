@@ -1,8 +1,10 @@
 from sqlalchemy import Column, Integer, String, DateTime, select, Boolean
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import Base
+from app.db.models.user_settings import UserSetting
 from app.db.schemas import UserCreate
 from app.core import get_hash
 
@@ -17,6 +19,9 @@ class User(Base):
 
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
+    settings = relationship("UserSetting", uselist=False, back_populates="user", cascade="all, delete-orphan")
+
+
     def __repr__(self):
         return f"<User(email={self.email}, hashed_password={self.hashed_password})>"
 
@@ -24,7 +29,8 @@ class User(Base):
 async def create_user(db: AsyncSession, user_db: UserCreate):
     db_item = User(
         email=user_db.email,
-        hashed_password=get_hash(user_db.password)
+        hashed_password=get_hash(user_db.password),
+        settings=UserSetting()
     )
     db.add(db_item)
     await db.commit()
