@@ -19,6 +19,6 @@ torch==2.0.1
 transformers==4.48.1
 yandex_cloud_ml_sdk==0.2.0
 rank-bm25==0.2.2
-boto3==1.37.22
+boto3
 PyPDF2==3.0.1
-aiobotocore==2.22.0
+aiobotocore
