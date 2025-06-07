@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5cb7c298-db7a-419e-bc1f-f3b741b78cb8" name="Changes" comment="" />
+    <list default="true" id="5cb7c298-db7a-419e-bc1f-f3b741b78cb8" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API/rag/get_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/API/rag/get_data.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API/rag/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/API/rag/main.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -40,13 +44,13 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;async__rag&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/arturfahretdinov/RAG_Petergof_API&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "rag",
+    "last_opened_file_path": "/Users/arturfahretdinov/RAG_Petergof_API"
   }
-}</component>
+}]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

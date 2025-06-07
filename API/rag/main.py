@@ -34,7 +34,7 @@ async def download_pickle_object(s3_client, key):
     return pickle.load(io.BytesIO(data))
 
 
-async def get_answer(index_name, question):
+async def get_answer(index_name, question, temp, faiss_search, bm_search, prompt):
     session = aiobotocore.session.get_session()
     async with session.create_client(
             "s3",
@@ -44,7 +44,7 @@ async def get_answer(index_name, question):
             aws_access_key_id=ACCESS_KEY,
     ) as s3_client:
 
-        indices, top_bm25_indices = await get_lists(index_name, question)
+        indices, top_bm25_indices = await get_lists(index_name, question, faiss_search, bm_search)
         metadata_key = f"{RAG_PATH}/metadata_{index_name}.pkl"
         chunks_key = f"{RAG_PATH}/chunks_{index_name}.pkl"
 
@@ -57,11 +57,10 @@ async def get_answer(index_name, question):
     result = ""
     for i, idx in enumerate(indices):
         if idx < len(chunks):
-            result += f"Текст {i + 1}:\nФайл: {metadata[idx][0]}, страница: {metadata[idx][1]}\nТекст: {chunks[idx]}\n\n"
+            result += f"Текст {i + 1} (FAISS):\nФайл: {metadata[idx][0]}, страница: {metadata[idx][1]}\nТекст: {chunks[idx]}\n\n"
 
-    top_k = 18
     for i, idx in enumerate(top_bm25_indices):
-        result += f"Текст {top_k + i + 1} (BM25):\nФайл: {metadata[idx]}\nТекст: {chunks[idx]}\n\n"
+        result += f"Текст {faiss_search + i + 1} (BM25):\nФайл: {metadata[idx]}\nТекст: {chunks[idx]}\n\n"
 
     print("Forming result:", time() - t)
     t = time()
@@ -69,11 +68,7 @@ async def get_answer(index_name, question):
     messages = [
         {
             "role": "user",
-            "text": f"Вы ассистируете научного руководителя музейного комплекса Петергоф. "
-                    f"Ниже вам дан контекст, откуда брать информацию. Разрешено брать сразу несколько текстов. "
-                    f"Отвечайте на вопросы, которые он задает. Игнорируйте контекст, если считаете его нерелевантным. "
-                    f"Ответь на вопрос: {question}. Вместе с ответом также напишите название файла и страницу, "
-                    f"откуда была взята информация.\nКонтекст:\n" + result,
+            "text": f"{prompt} {question}. Контекст: {result}",
         },
     ]
 
@@ -84,7 +79,7 @@ async def get_answer(index_name, question):
 
     loop = asyncio.get_running_loop()
     answer = await loop.run_in_executor(None,
-                                         lambda: sdk.models.completions("yandexgpt").configure(temperature=0.2).run(
+                                         lambda: sdk.models.completions("yandexgpt").configure(temperature=temp).run(
                                              messages))
 
     print("YaGPT time:", time() - t)
@@ -100,3 +95,4 @@ if __name__ == "__main__":
     question = sys.argv[2]
 
     asyncio.run(get_answer(index_name, question))
+    

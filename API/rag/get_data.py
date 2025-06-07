@@ -34,7 +34,7 @@ async def download_s3_bytes(s3_client, key):
         return await stream.read()
 
 
-async def get_lists(index_name, question):
+async def get_lists(index_name, question, faiss_search, bm_search):
     session = aiobotocore.session.get_session()
     async with session.create_client(
             "s3",
@@ -61,11 +61,9 @@ async def get_lists(index_name, question):
     query_model = sdk.models.text_embeddings("query")
     query_embedding = np.array([query_model.run(question)], dtype=np.float32)
 
-    top_k = 18
-    distances, indices = index.search(query_embedding, top_k)
+    distances, indices = index.search(query_embedding, faiss_search)
 
-    top_k_bm25 = 3
     bm25_scores = bm25.get_scores(preprocess_text(question))
-    top_bm25_indices = np.argsort(bm25_scores)[-top_k_bm25:][::-1]
+    top_bm25_indices = np.argsort(bm25_scores)[-bm_search:][::-1]
 
     return indices[0], top_bm25_indices
