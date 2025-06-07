@@ -90,7 +90,13 @@ const ChatComponent = () => {
             >
                 <Nav.Item>
                     <Nav.Link href="/chat">Чат</Nav.Link>
+
                 </Nav.Item>
+
+                <Nav.Item>
+                    <Nav.Link href="/settings">Настройки</Nav.Link>
+                </Nav.Item>
+
 
                 {showTabs && (
                     <>

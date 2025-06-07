@@ -4,6 +4,7 @@ import RegisterForm from "./components/Register";
 import ChatComponent from "./components/Chat";
 import CreateIndex from "./components/CreateIndex";
 import OcrUpload from "./components/OcrUpload";
+import Settings from "./components/Settings";
 
 function App() {
     const isAuthenticated = localStorage.getItem("access_token") && localStorage.getItem("refresh_token");
@@ -16,6 +17,7 @@ function App() {
                 <Route path="/chat" element={<ChatComponent/>}/>
                 <Route path="/create_index" element={<CreateIndex/>}/>
                 <Route path="/file" element={<OcrUpload/>}/>
+                <Route path="/settings" element={<Settings/>}/>
                 <Route path="*" element={<Navigate to={isAuthenticated ? "/chat" : "/login"}/>}/>
             </Routes>
         </Router>
