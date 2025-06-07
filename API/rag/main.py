@@ -5,18 +5,12 @@ import sys
 import os
 import asyncio
 from time import time
-from sentence_transformers import SentenceTransformer
 from yandex_cloud_ml_sdk import YCloudML
-from transformers import AutoModel, AutoTokenizer
-import torch
 from dotenv import load_dotenv
 import aiobotocore.session
 import io
 import re
-from get_data_new import get_lists
-from collections import defaultdict
-
-from rank_bm25 import BM25Okapi
+from .get_data import get_lists
 
 load_dotenv()
 
