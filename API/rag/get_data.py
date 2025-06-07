@@ -11,6 +11,7 @@ from yandex_cloud_ml_sdk import YCloudML
 from rank_bm25 import BM25Okapi
 import aiobotocore.session
 import asyncio
+import uuid
 
 load_dotenv()
 
@@ -48,9 +49,11 @@ async def get_lists(index_name, question):
             download_s3_bytes(s3_client, f"{RAG_PATH}/bm25_{index_name}.pkl"),
         )
 
-    reader = faiss.MemoryIOReader()
-    reader.copy_from_buffer(index_bytes)
-    index = faiss.read_index(reader)
+    unique_filename = f"/tmp/temp_index_{uuid.uuid4().hex}.faiss"
+    with open(unique_filename, "wb") as f:
+        f.write(index_bytes)
+    index = faiss.read_index(unique_filename)
+    os.remove(unique_filename)
 
     bm25 = pickle.loads(bm25_bytes)
 
