@@ -195,7 +195,7 @@ async def setup_rabbitmq():
     Setup RabbitMQ
     """
     try:
-        connection = await aio_pika.connect_robust("amqp://guest:guest@localhost/")
+        connection = await aio_pika.connect_robust("amqp://guest:guest@rabbitmq:5672")
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
         

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15
@@ -41,3 +39,39 @@ services:
     env_file:
       - .env
     restart: always
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_LOGS: "/dev/null"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmqctl status || exit 1"]
+      interval: 1s
+      timeout: 5s
+      retries: 60
+  
+  ocr_micro_servis:
+    build: 
+      context: ./ocr_micro_servis
+      dockerfile: Dockerfile
+    container_name: ocr_micro_servis
+    environment:
+      - PYTHONUNBUFFERED="1"
+    env_file:
+      - ./ocr_micro_servis/.env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+    restart: always
+
+volumes:
+  rabbitmq_data:

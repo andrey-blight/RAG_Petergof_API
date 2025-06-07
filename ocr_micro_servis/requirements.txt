@@ -1,0 +1,5 @@
+aio-pika==9.5.5
+aiohttp==3.10.11
+boto3==1.35.83
+python-dotenv==1.0.1
+PyPDF2==3.0.1
