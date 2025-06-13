@@ -23,6 +23,7 @@ BUCKET_NAME = "markup-baket"
 RAG_PATH = "data/rag"
 
 
+
 def format_reference(idx, filename, pages, note="[источники Петергофа]"):
     name = filename.replace(".txt", "").replace("_", " ")
     pages_str = ", ".join(str(p) for p in sorted(pages))
@@ -31,7 +32,6 @@ def format_reference(idx, filename, pages, note="[источники Петер�
 def preprocess_text(text):
     text = re.sub(r"[^\w\s]", "", text).lower()
     return text.split()
-
 
 async def download_pickle_object(s3_client, key):
     response = await s3_client.get_object(Bucket=BUCKET_NAME, Key=key)

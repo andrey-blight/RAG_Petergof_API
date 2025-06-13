@@ -10,11 +10,9 @@ ACCESS_KEY = os.getenv("ACCESS_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY_OCR")
 BUCKET_NAME = "markup-baket"
 
-
 def delete_ind(index_name):
     list_indexes_filepath = "data/metadata/list_indexes.json"
     rag_base_path = "data/rag/"
-
     s3_client = boto3.client(
         "s3",
         endpoint_url="https://storage.yandexcloud.net",
