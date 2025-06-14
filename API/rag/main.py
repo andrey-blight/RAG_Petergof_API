@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 import aiobotocore.session
 import io
 import re
+from collections import defaultdict
 from .get_data import get_lists
 
 load_dotenv()
@@ -22,10 +23,15 @@ BUCKET_NAME = "markup-baket"
 RAG_PATH = "data/rag"
 
 
+
+def format_reference(idx, filename, pages, note="[источники Петергофа]"):
+    name = filename.replace(".txt", "").replace("_", " ")
+    pages_str = ", ".join(str(p) for p in sorted(pages))
+    return f"{idx}. {name}. — С. {pages_str}. — {note}."
+
 def preprocess_text(text):
     text = re.sub(r"[^\w\s]", "", text).lower()
     return text.split()
-
 
 async def download_pickle_object(s3_client, key):
     response = await s3_client.get_object(Bucket=BUCKET_NAME, Key=key)
@@ -55,12 +61,15 @@ async def get_answer(index_name, question, temp, faiss_search, bm_search, prompt
 
     t = time()
     result = ""
+    files = defaultdict(set)
     for i, idx in enumerate(indices):
         if idx < len(chunks):
             result += f"Текст {i + 1} (FAISS):\nФайл: {metadata[idx][0]}, страница: {metadata[idx][1]}\nТекст: {chunks[idx]}\n\n"
+            files[metadata[idx][0]].add(metadata[idx][1])
 
     for i, idx in enumerate(top_bm25_indices):
         result += f"Текст {faiss_search + i + 1} (BM25):\nФайл: {metadata[idx]}\nТекст: {chunks[idx]}\n\n"
+        files[metadata[idx][0]].add(metadata[idx][1])
 
     print("Forming result:", time() - t)
     t = time()
@@ -83,7 +92,12 @@ async def get_answer(index_name, question, temp, faiss_search, bm_search, prompt
                                              messages))
 
     print("YaGPT time:", time() - t)
-    return answer[0].text
+    formatted_references = [
+        format_reference(i + 1, fn, pg) for i, (fn, pg) in enumerate(files.items())
+    ]
+    links = "\n".join(formatted_references)
+
+    return f"{answer[0].text}\n\nИсточники:\n{links}", result
 
 
 if __name__ == "__main__":
