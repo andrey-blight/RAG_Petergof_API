@@ -123,7 +123,7 @@ const ChatComponent = () => {
                     >
                         <Card.Body>
                             <div className="d-flex justify-content-between align-items-center">
-                                <span>{msg.text}</span>
+                                <pre>{msg.text}</pre>
                                 {msg.sender === "bot" && (
                                     <ButtonGroup size="sm">
                                         <Button

@@ -60,4 +60,4 @@ async def check_status(task_id: str):
         raise HTTPException(status_code=404, detail="Still running")
     response = tasks[task_id]
     tasks.pop(task_id)
-    return StatusResponse(status=response)
+    return StatusResponse(status=response[0] + '\n\n\n\n\n\n\n\n' + response[1])
