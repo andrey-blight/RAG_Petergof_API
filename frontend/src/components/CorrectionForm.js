@@ -1,78 +1,124 @@
 import React, {useState} from "react";
-import {Button, Form, Row, Col, Card} from "react-bootstrap";
+import {Button, Form, Row, Col, Card, Modal, Spinner, Alert} from "react-bootstrap";
 import {X} from "react-bootstrap-icons";
 import {sendStatistic} from "../api/SendStatistic";
 import {useNavigate} from "react-router-dom";
 
 const CorrectionForm = ({messageForCorrection, setMessageForCorrection, question, onClose}) => {
     const [correctedAnswer, setCorrectedAnswer] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
 
     const handleCorrectionSubmit = async (e) => {
         e.preventDefault();
+        
+        if (!correctedAnswer.trim()) {
+            setError("Пожалуйста, введите правильный ответ");
+            return;
+        }
 
-        await sendStatistic(question, messageForCorrection, false, correctedAnswer, navigate)
-
-        setMessageForCorrection("");
-        setCorrectedAnswer("");
-        onClose();
+        setLoading(true);
+        setError(null);
+        
+        try {
+            await sendStatistic(question, messageForCorrection, false, correctedAnswer, navigate);
+            setSuccess(true);
+            setTimeout(() => {
+                setMessageForCorrection("");
+                setCorrectedAnswer("");
+                setSuccess(false);
+                onClose();
+            }, 1500);
+        } catch (error) {
+            setError("Ошибка отправки исправления. Попробуйте позже.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <div
-            className="d-flex justify-content-center align-items-center position-fixed top-50 start-50 translate-middle"
-            style={{width: '80%'}}
-        >
-            <Card className="p-4" style={{width: "100%", maxWidth: "800px"}}>
-                <Card.Body>
-                    <Button
-                        variant="link"
-                        onClick={onClose}
-                        style={{
-                            position: "absolute",
-                            top: "10px",
-                            right: "10px",
-                            fontSize: "1.5rem",
-                            color: "black",
-                        }}
-                    >
-                        <X/>
-                    </Button>
+        <Modal show={true} onHide={onClose} size="lg" centered>
+            <Modal.Header className="bg-primary text-white">
+                <Modal.Title>Исправление ответа</Modal.Title>
+                <Button
+                    variant="link"
+                    onClick={onClose}
+                    className="text-white"
+                    style={{marginLeft: 'auto', padding: 0}}
+                >
+                    <X size={24} />
+                </Button>
+            </Modal.Header>
+            <Modal.Body>
+                {error && (
+                    <Alert variant="danger" dismissible onClose={() => setError(null)}>
+                        {error}
+                    </Alert>
+                )}
+                {success && (
+                    <Alert variant="success">
+                        Спасибо за обратную связь!
+                    </Alert>
+                )}
 
-                    <Form onSubmit={handleCorrectionSubmit}>
-                        <Row className="mb-3">
-                            <Col>
-                                <h4>Текст ответа:</h4>
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <span>{messageForCorrection}</span>
-                                </div>
-                            </Col>
-                        </Row>
+                <Form onSubmit={handleCorrectionSubmit}>
+                    <Form.Group className="mb-3">
+                        <Form.Label className="fw-semibold">Вопрос:</Form.Label>
+                        <Card className="bg-light p-3">
+                            <p className="mb-0" style={{whiteSpace: 'pre-wrap'}}>{question}</p>
+                        </Card>
+                    </Form.Group>
 
-                        <Row className="mb-3">
-                            <Col>
-                                <Form.Label>Правильный ответ</Form.Label>
-                                <Form.Control
-                                    as="textarea"
-                                    rows={5}
-                                    value={correctedAnswer}
-                                    onChange={(e) => setCorrectedAnswer(e.target.value)}
-                                    placeholder="Введите правильный ответ"
-                                />
-                            </Col>
-                        </Row>
+                    <Form.Group className="mb-3">
+                        <Form.Label className="fw-semibold">Текущий ответ:</Form.Label>
+                        <Card className="bg-light p-3">
+                            <p className="mb-0" style={{whiteSpace: 'pre-wrap'}}>{messageForCorrection}</p>
+                        </Card>
+                    </Form.Group>
 
-                        <Row>
-                            <Col xs="auto">
-                                <Button type="submit" variant="primary">
-                                    Отправить
-                                </Button>
-                            </Col>
-                        </Row>
-                    </Form>
-                </Card.Body>
-            </Card>
-        </div>
+                    <Form.Group className="mb-3">
+                        <Form.Label className="fw-semibold">Правильный ответ:</Form.Label>
+                        <Form.Control
+                            as="textarea"
+                            rows={6}
+                            value={correctedAnswer}
+                            onChange={(e) => setCorrectedAnswer(e.target.value)}
+                            placeholder="Введите правильный ответ"
+                            disabled={loading || success}
+                        />
+                        <Form.Text className="text-muted">
+                            Пожалуйста, укажите, какой ответ должен был быть дан
+                        </Form.Text>
+                    </Form.Group>
+
+                    <div className="d-flex justify-content-end gap-2">
+                        <Button
+                            variant="secondary"
+                            onClick={onClose}
+                            disabled={loading || success}
+                        >
+                            Отмена
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            disabled={loading || success || !correctedAnswer.trim()}
+                        >
+                            {loading ? (
+                                <>
+                                    <Spinner animation="border" size="sm" className="me-2" />
+                                    Отправка...
+                                </>
+                            ) : (
+                                "Отправить"
+                            )}
+                        </Button>
+                    </div>
+                </Form>
+            </Modal.Body>
+        </Modal>
     );
 };
 
