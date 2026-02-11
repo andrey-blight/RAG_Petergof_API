@@ -8,7 +8,7 @@ YANDEX_API_KEY = os.getenv("YC_API_KEY")
 YANDEX_FOLDER_ID = os.getenv("YC_FOLDER_ID")
 
 
-async def add_file_to_index(index_id, file_to_add):
+async def add_file_to_index(index_id, file_to_add_id):
     client = AsyncOpenAI(
         api_key=YANDEX_API_KEY,
         base_url="https://ai.api.cloud.yandex.net/v1",
@@ -19,7 +19,7 @@ async def add_file_to_index(index_id, file_to_add):
     
     await client.vector_stores.files.create(
         vector_store_id=index_id,
-        file_id=file_to_add
+        file_id=file_to_add_id
     )
     
-    print(f"Файл {file_to_add} добавлен в индекс:", index_id)
+    print(f"Файл {file_to_add_id} добавлен в индекс:", index_id)
