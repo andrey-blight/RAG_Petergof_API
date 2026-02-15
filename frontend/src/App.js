@@ -5,22 +5,54 @@ import ChatComponent from "./components/Chat";
 import CreateIndex from "./components/CreateIndex";
 import OcrUpload from "./components/OcrUpload";
 import Settings from "./components/Settings";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 function App() {
     const isAuthenticated = localStorage.getItem("access_token") && localStorage.getItem("refresh_token");
 
     return (
-        <Router>
-            <Routes>
-                <Route path="/login" element={<LoginForm/>}/>
-                <Route path="register" element={<RegisterForm/>}/>
-                <Route path="/chat" element={<ChatComponent/>}/>
-                <Route path="/create_index" element={<CreateIndex/>}/>
-                <Route path="/file" element={<OcrUpload/>}/>
-                <Route path="/settings" element={<Settings/>}/>
-                <Route path="*" element={<Navigate to={isAuthenticated ? "/chat" : "/login"}/>}/>
-            </Routes>
-        </Router>
+        <ThemeProvider>
+            <Router>
+                <Routes>
+                <Route path="/login" element={isAuthenticated ? <Navigate to="/chat" replace /> : <LoginForm/>}/>
+                <Route path="/register" element={isAuthenticated ? <Navigate to="/chat" replace /> : <RegisterForm/>}/>
+                <Route 
+                    path="/chat" 
+                    element={
+                        <ProtectedRoute>
+                            <ChatComponent/>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route 
+                    path="/create_index" 
+                    element={
+                        <ProtectedRoute>
+                            <CreateIndex/>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route 
+                    path="/file" 
+                    element={
+                        <ProtectedRoute>
+                            <OcrUpload/>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route 
+                    path="/settings" 
+                    element={
+                        <ProtectedRoute>
+                            <Settings/>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route path="*" element={<Navigate to={isAuthenticated ? "/chat" : "/login"} replace/>}/>
+                </Routes>
+            </Router>
+        </ThemeProvider>
     );
 }
 
